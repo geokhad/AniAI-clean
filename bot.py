@@ -7,6 +7,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler
 from aiohttp import web
 from ai.chat import handle_ask
 from handlers.start import start
+from handlers.menu import menu
 import nest_asyncio
 
 # Логи
@@ -19,21 +20,26 @@ WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 PORT = int(os.environ.get("PORT", 8080))
 HOST = "0.0.0.0"
 
+# Создаём приложение
 app = ApplicationBuilder().token(TOKEN).build()
+
+# Обработчики команд
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("ask", handle_ask))
+app.add_handler(CommandHandler("menu", menu))  # 🟢 теперь в правильном месте
 
-# aiohttp веб-сервер для Webhook
+# Webhook endpoint
 async def handle_telegram(request):
     data = await request.json()
     update = Update.de_json(data, app.bot)
     await app.process_update(update)
     return web.Response(text="OK")
 
-# проверка доступности
+# Проверка сервера
 async def handle_check(request):
     return web.Response(text="AniAI on Railway ✅")
 
+# Основной запуск
 async def main():
     await app.initialize()
     await app.bot.set_webhook(url=WEBHOOK_URL)
