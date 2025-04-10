@@ -20,4 +20,14 @@ app.add_handler(CommandHandler("ask", handle_ask))
 print("✅ AniAI запущена через polling.")
 
 if __name__ == "__main__":
-    app.run_polling()
+    import asyncio
+
+    async def run():
+        # Удаляет Webhook, если был установлен — чтобы не было конфликтов
+        await app.bot.delete_webhook(drop_pending_updates=True)
+
+        # Запускает бота в режиме polling
+        await app.run_polling()
+
+    asyncio.run(run())
+
