@@ -1,18 +1,32 @@
-from dotenv import load_dotenv
-load_dotenv()
+import os
+import logging
+from telegram.ext import ApplicationBuilder, CommandHandler
 from ai.chat import handle_ask
 from handlers.start import start
-from telegram.ext import ApplicationBuilder, CommandHandler
-
-import os
+from dotenv import load_dotenv
 import nest_asyncio
+
 nest_asyncio.apply()
+load_dotenv()
 
-TOKEN = os.environ["TOKEN"]
+TOKEN = os.getenv("TOKEN")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # добавь это в Render переменные
+
+PORT = int(os.environ.get("PORT", 10000))
+HOST = "0.0.0.0"
+
 app = ApplicationBuilder().token(TOKEN).build()
-
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("ask", handle_ask))
 
-print("✅ AniAI запущена")
-app.run_polling()
+print("✅ AniAI запущена через Webhook.")
+
+async def main():
+    await app.initialize()
+    await app.start()
+    await app.bot.set_webhook(url=WEBHOOK_URL)
+    await app.updater.start_webhook(listen=HOST, port=PORT)
+    await app.updater.idle()
+
+import asyncio
+asyncio.run(main())
