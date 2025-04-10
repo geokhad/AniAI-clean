@@ -7,40 +7,38 @@ from ai.chat import handle_ask
 from handlers.start import start
 import nest_asyncio
 
-# Настройка логов
+# Настройка логирования
 logging.basicConfig(level=logging.INFO)
 
-# Применение патча для Jupyter / Render
+# Разрешаем вложенные asyncio петли (важно для Render и Jupyter)
 nest_asyncio.apply()
 
-# Загрузка переменных окружения
+# Загрузка переменных из .env или Render Environment
 load_dotenv()
 
-# Чтение токена и адреса Webhook
+# Переменные окружения
 TOKEN = os.getenv("TOKEN")
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # Например: https://aniai.onrender.com
-
-# Конфигурация сервера
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # например, https://aniai.onrender.com
 PORT = int(os.environ.get("PORT", 10000))
 HOST = "0.0.0.0"
 
 # Инициализация приложения
 app = ApplicationBuilder().token(TOKEN).build()
 
-# Регистрируем команды
+# Обработчики команд
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("ask", handle_ask))
 
+# Асинхронный запуск с Webhook
 async def main():
-    print("🌐 Настраиваем Webhook...")
+    print("🌐 Настройка Webhook...")
     await app.initialize()
     await app.bot.set_webhook(url=WEBHOOK_URL)
     await app.start()
     print("✅ AniAI запущена через Webhook.")
-    await app.updater.start_polling()  # <- обязательно оставить, даже если не используется polling
-    await app.updater.idle()
+    # Вебхук работает — ждем события
+    await asyncio.Event().wait()  # бесконечное ожидание
 
-# Запускаем
+# Запуск
 if __name__ == "__main__":
     asyncio.run(main())
-
