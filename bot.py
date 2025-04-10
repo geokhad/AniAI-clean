@@ -25,11 +25,15 @@ app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("ask", handle_ask))
 
 # Aiohttp сервер для Telegram Webhook
+
+from telegram import Update
+
 async def handle_telegram(request):
     data = await request.json()
-    update = app._extract_update(data, None)  # десериализация
-    await app.process_update(update)  # передача в диспетчер
+    update = Update.de_json(data, app.bot)  # превращаем JSON в Update
+    await app.process_update(update)        # передаём в Telegram App
     return web.Response()
+
 
 # Пинги на GET можно оставить
 async def handle_check(request):
