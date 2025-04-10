@@ -2,36 +2,33 @@ import os
 import logging
 import asyncio
 from dotenv import load_dotenv
-from telegram import Update, Bot
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram import Bot
+from telegram.ext import ApplicationBuilder, CommandHandler
 
 from handlers.start import start
 from ai.chat import handle_ask
+import nest_asyncio
 
-# Настройки логов
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
+# Настройка логов
+logging.basicConfig(level=logging.INFO)
+nest_asyncio.apply()
 
 # Загрузка переменных окружения
 load_dotenv()
-
 TOKEN = os.getenv("TOKEN")
 
-# Удаляем Webhook, если он был установлен ранее
-async def delete_webhook():
+# Функция запуска polling с удалением Webhook
+async def main():
     bot = Bot(token=TOKEN)
     await bot.delete_webhook(drop_pending_updates=True)
 
-asyncio.run(delete_webhook())
+    app = ApplicationBuilder().token(TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("ask", handle_ask))
 
-# Инициализация бота
-app = ApplicationBuilder().token(TOKEN).build()
+    print("🤖 AniAI запущена через polling.")
+    await app.run_polling()
 
-# Обработчики команд
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler("ask", handle_ask))
-
-# Запуск через polling
-print("🤖 AniAI запущена через polling.")
-app.run_polling()
+# Запуск
+if __name__ == "__main__":
+    asyncio.run(main())
