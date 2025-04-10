@@ -11,8 +11,6 @@ import nest_asyncio
 
 # Настройка логов
 logging.basicConfig(level=logging.INFO)
-
-# Патч для nested loops
 nest_asyncio.apply()
 load_dotenv()
 
@@ -21,28 +19,38 @@ WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 PORT = int(os.environ.get("PORT", 10000))
 HOST = "0.0.0.0"
 
+# Telegram App
 app = ApplicationBuilder().token(TOKEN).build()
-
-# Регистрируем команды
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("ask", handle_ask))
 
-# Aiohttp-приложение для Render
-async def handle(request):
-    return web.Response(text="AniAI online ✅")
+# Aiohttp сервер для Telegram Webhook
+async def handle_telegram(request):
+    data = await request.json()
+    await app.update_queue.put(data)
+    return web.Response()
 
-web_app = web.Application()
-web_app.add_routes([web.get("/", handle)])
+# Пинги на GET можно оставить
+async def handle_check(request):
+    return web.Response(text="✅ AniAI online")
 
+# Запуск
 async def main():
-    print("🌐 Устанавливаем Webhook...")
     await app.initialize()
     await app.bot.set_webhook(url=WEBHOOK_URL)
     await app.start()
+
+    web_app = web.Application()
+    web_app.add_routes([
+        web.post("/", handle_telegram),
+        web.get("/", handle_check),
+    ])
+
     runner = web.AppRunner(web_app)
     await runner.setup()
     site = web.TCPSite(runner, HOST, PORT)
     await site.start()
+
     print(f"✅ AniAI слушает Webhook на {WEBHOOK_URL}")
     await asyncio.Event().wait()
 
