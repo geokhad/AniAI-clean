@@ -4,3 +4,4 @@ gspread
 oauth2client
 nest_asyncio
 python-dotenv
+aiohttp
