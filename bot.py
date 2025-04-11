@@ -9,6 +9,8 @@ from ai.chat import handle_ask
 from handlers.start import start
 from handlers.menu import menu
 import nest_asyncio
+from telegram.ext import CallbackQueryHandler
+
 
 # Логи
 logging.basicConfig(level=logging.INFO)
@@ -26,7 +28,21 @@ app = ApplicationBuilder().token(TOKEN).build()
 # Обработчики команд
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("ask", handle_ask))
-app.add_handler(CommandHandler("menu", menu))  # 🟢 теперь в правильном месте
+app.add_handler(CommandHandler("menu", menu))
+
+# 🔧 Обработчик кнопок (вынесен отдельно — не внутри add_handler)
+async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    if query.data == "go_menu":
+        await context.bot.send_message(
+            chat_id=query.message.chat.id,
+            text="📋 Меню AniAI загружается..."
+        )
+        await context.bot.send_message(chat_id=query.message.chat.id, text="/menu")
+
+# 👇 Регистрация обработчика кнопок
+app.add_handler(CallbackQueryHandler(handle_button))
 
 # Webhook endpoint
 async def handle_telegram(request):
