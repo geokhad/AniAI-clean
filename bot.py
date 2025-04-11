@@ -3,14 +3,13 @@ import logging
 import asyncio
 from dotenv import load_dotenv
 from telegram import Update, Bot
-from telegram.ext import ApplicationBuilder, CommandHandler
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 from aiohttp import web
+
 from ai.chat import handle_ask
 from handlers.start import start
 from handlers.menu import menu
 import nest_asyncio
-from telegram.ext import CallbackQueryHandler
-
 
 # Логи
 logging.basicConfig(level=logging.INFO)
