@@ -10,7 +10,6 @@ from handlers.start import start
 from handlers.menu import menu
 import nest_asyncio
 
-# Логи
 logging.basicConfig(level=logging.INFO)
 nest_asyncio.apply()
 load_dotenv()
@@ -35,7 +34,6 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text="📋 Главное меню AniAI загружается..."
         )
         await menu(update, context)
-
     elif query.data == "gpt_help":
         await query.message.reply_text("🧠 Напиши /ask и свой вопрос для GPT-помощи.")
     elif query.data == "voice_mode":
