@@ -29,10 +29,7 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
 
     if query.data == "go_menu":
-        await context.bot.send_message(
-            chat_id=query.message.chat.id,
-            text="📋 Главное меню AniAI загружается..."
-        )
+        await context.bot.send_message(chat_id=query.message.chat.id, text="📋 Главное меню AniAI загружается...")
         await menu(update, context)
     elif query.data == "gpt_help":
         await query.message.reply_text("🧠 Напиши /ask и свой вопрос для GPT-помощи.")

@@ -54,9 +54,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "💬 Если возникнут вопросы или хочешь оставить отзыв — напиши в поддержку: @AniAI_supportbot"
     )
 
-    keyboard = [
-        [InlineKeyboardButton("🚀 Начать работу", callback_data="go_menu")]
-    ]
+    keyboard = [[InlineKeyboardButton("🚀 Начать работу", callback_data="go_menu")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     await update.message.reply_text(text, parse_mode="HTML", reply_markup=reply_markup)
