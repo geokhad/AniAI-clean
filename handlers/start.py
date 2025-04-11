@@ -1,41 +1,25 @@
-Traceback (most recent call last):
+from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram.ext import ContextTypes
+from utils.google_sheets import log_subscriber
 
-  File "/app/bot.py", line 14, in <module>
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    log_subscriber(user.id, user.full_name, user.username)
 
-    from handlers.start import start
+    text = """👋 <b>Добро пожаловать в <u>AniAI</u></b> — вашего умного помощника на базе нейросетей!
 
-  File "/app/handlers/start.py", line 10
+✨ Используй возможности ИИ без сложных настроек и VPN — просто открой бот и начни:
 
-    "👋 Добро пожаловать в <b>AniAI</b> — интеллектуального ассистента для работы, учёбы и жизни!
+• 💬 Общайся с нейросетью: задавай вопросы, проси советы, создавай тексты  
+• 🖼 Генерируй изображения по описанию  
+• 🎶 Получай музыку и мелодии под настроение  
+• 🎬 Проси видео и визуальный контент — AniAI справится!
 
-    ^
+И это лишь начало — бот умеет куда больше, чем ты думаешь.  
+🚀 Готов начать? Нажми кнопку ниже 👇
+"""
 
-SyntaxError: unterminated string literal (detected at line 10)
+    keyboard = [[InlineKeyboardButton("🚀 Начать работу", callback_data="go_menu")]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-Traceback (most recent call last):
-
-  File "/app/bot.py", line 14, in <module>
-
-    from handlers.start import start
-
-  File "/app/handlers/start.py", line 10
-
-    "👋 Добро пожаловать в <b>AniAI</b> — интеллектуального ассистента для работы, учёбы и жизни!
-
-    ^
-
-SyntaxError: unterminated string literal (detected at line 10)
-
-Traceback (most recent call last):
-
-  File "/app/bot.py", line 14, in <module>
-
-    from handlers.start import start
-
-  File "/app/handlers/start.py", line 10
-
-    "👋 Добро пожаловать в <b>AniAI</b> — интеллектуального ассистента для работы, учёбы и жизни!
-
-    ^
-
-SyntaxError: unterminated string literal (detected at line 10)
+    await update.message.reply_text(text, parse_mode="HTML", reply_markup=reply_markup)
