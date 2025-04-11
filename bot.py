@@ -10,7 +10,6 @@ from handlers.start import start
 from handlers.menu import menu, handle_button
 import nest_asyncio
 
-# Логи
 logging.basicConfig(level=logging.INFO)
 nest_asyncio.apply()
 load_dotenv()
@@ -22,13 +21,11 @@ HOST = "0.0.0.0"
 
 app = ApplicationBuilder().token(TOKEN).build()
 
-# Обработчики команд
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("ask", handle_ask))
 app.add_handler(CommandHandler("menu", menu))
 app.add_handler(CallbackQueryHandler(handle_button))
 
-# aiohttp веб-сервер для Webhook
 async def handle_telegram(request):
     data = await request.json()
     update = Update.de_json(data, app.bot)
