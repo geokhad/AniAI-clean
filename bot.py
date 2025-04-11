@@ -42,7 +42,9 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if data == "go_menu":
         await query.message.reply_text("📋 Главное меню AniAI загружается...")
-        await menu(update, context)
+        # создаем фейковый Update из CallbackQuery для команды menu
+        fake_update = Update(update.update_id, message=query.message)
+        await menu(fake_update, context)
 
     elif data == "ask":
         await query.message.reply_text("✍️ Напиши свой вопрос в формате: /ask Вопрос")
