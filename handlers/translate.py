@@ -2,11 +2,9 @@ from telegram import Update
 from telegram.ext import ContextTypes
 import os
 from openai import OpenAI
+from handlers.state import active_translators  # 🟢 Перенесено в state.py
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-# Активные пользователи, ожидающие перевода
-active_translators = set()
 
 async def translate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -19,7 +17,6 @@ async def translate(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_translation_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
 
-    # Проверяем, активировал ли пользователь перевод
     if user_id not in active_translators:
         return
 

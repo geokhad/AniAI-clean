@@ -1,10 +1,8 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 
-# Импорт активных состояний из модулей
-from handlers.translate import active_translators
-from handlers.image import active_image
-from handlers.chat import active_ask  # ✅ ДОБАВЛЕН
+# Импорт глобальных состояний из state.py
+from handlers.state import active_ask, active_translators, active_image
 
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [

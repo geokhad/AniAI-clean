@@ -65,7 +65,7 @@ async def handle_check(request):
 async def main():
     await app.initialize()
 
-    # Устанавливаем меню Telegram
+    # Устанавливаем команды Telegram
     await app.bot.set_my_commands([
         BotCommand("menu", "📋 Главное меню AniAI"),
         BotCommand("ask", "🧠 Задать вопрос"),

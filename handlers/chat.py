@@ -2,7 +2,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 import os
 from openai import OpenAI
-from handlers.menu import active_ask
+from handlers.state import active_ask  # ✅ Исправлено
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -33,4 +33,3 @@ async def send_gpt_response(update: Update, prompt: str):
         await update.message.reply_text(answer)
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка от GPT: {e}")
-
