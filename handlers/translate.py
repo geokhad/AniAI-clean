@@ -5,18 +5,34 @@ from openai import OpenAI
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-async def translate(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text.replace("/translate", "").strip()
+# Активные пользователи, ожидающие перевода
+active_translators = set()
 
-    if not text:
-        await update.message.reply_text("❗ Пожалуйста, укажи текст после команды /translate.")
+async def translate(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    active_translators.add(user_id)
+    await update.message.reply_text(
+        "🌐 Введи текст для перевода.\n"
+        "AniAI автоматически определит язык и сделает перевод на русский или английский."
+    )
+
+async def handle_translation_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+
+    # Проверяем, активировал ли пользователь перевод
+    if user_id not in active_translators:
         return
+
+    text = update.message.text.strip()
 
     if len(text) > 3000:
-        await update.message.reply_text("✂️ Слишком много символов. Отправь до 3000 символов за раз.")
+        await update.message.reply_text("✂️ Слишком много символов. Пожалуйста, отправь до 3000 символов.")
         return
 
-    prompt = f"Переведи этот текст на английский или с английского на русский, в зависимости от исходного языка:\n{text}"
+    prompt = (
+        "Переведи следующий текст с английского на русский или с русского на английский, "
+        "в зависимости от исходного языка:\n\n" + text
+    )
 
     try:
         response = client.chat.completions.create(
@@ -26,4 +42,6 @@ async def translate(update: Update, context: ContextTypes.DEFAULT_TYPE):
         translation = response.choices[0].message.content
         await update.message.reply_text(translation)
     except Exception as e:
-        await update.message.reply_text(f"Произошла ошибка: {e}")
+        await update.message.reply_text(f"⚠️ Ошибка при переводе:\n{e}")
+    finally:
+        active_translators.discard(user_id)
