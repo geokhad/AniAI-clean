@@ -3,7 +3,7 @@ import logging
 import asyncio
 from dotenv import load_dotenv
 from aiohttp import web
-from telegram import Update
+from telegram import Update, BotCommand
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
@@ -55,8 +55,18 @@ async def handle_telegram(request):
 async def handle_check(request):
     return web.Response(text="AniAI on Railway ✅")
 
+# Основной запуск
 async def main():
     await app.initialize()
+
+    # 🟢 Установка постоянного меню кнопок (в интерфейсе Telegram)
+    await app.bot.set_my_commands([
+        BotCommand("menu", "📋 Главное меню AniAI"),
+        BotCommand("ask", "🧠 Задать вопрос"),
+        BotCommand("translate", "🌍 Перевести текст"),
+        BotCommand("image", "🎨 Создать изображение"),
+    ])
+
     await app.bot.set_webhook(url=WEBHOOK_URL)
     await app.start()
 
