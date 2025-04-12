@@ -4,6 +4,7 @@ from telegram.ext import ContextTypes
 # Импорт активных состояний из модулей
 from handlers.translate import active_translators
 from handlers.image import active_image
+from handlers.chat import active_ask  # ✅ ДОБАВЛЕН
 
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
@@ -26,7 +27,6 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-
     user_id = query.from_user.id
 
     if query.data == "go_menu":
@@ -48,6 +48,11 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # Активируем режимы
+    if query.data == "gpt_help":
+        active_ask.add(user_id)
+        await context.bot.send_message(chat_id=query.message.chat.id, text="🧠 Просто задай вопрос, и AniAI ответит. Например: «Объясни квантовую запутанность простыми словами»")
+        return
+
     if query.data == "image_help":
         active_image.add(user_id)
         await context.bot.send_message(chat_id=query.message.chat.id, text="📸 Опиши, что нужно изобразить.")
@@ -59,7 +64,6 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     responses = {
-        "gpt_help": "🧠 Просто задай вопрос, и AniAI ответит. Например: «Объясни квантовую запутанность простыми словами»",
         "examples": (
             "📚 Примеры запросов:\n"
             "• Переведи текст на английский\n"
