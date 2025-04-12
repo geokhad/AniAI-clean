@@ -6,6 +6,7 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("🧠 GPT-помощь", callback_data="gpt_help")],
         [InlineKeyboardButton("📚 Примеры запросов", callback_data="examples")],
         [InlineKeyboardButton("📸 Сгенерировать изображение", callback_data="image_help")],
+        [InlineKeyboardButton("📄 Проанализировать документ", callback_data="analyze_help")],
         [InlineKeyboardButton("🌍 Перевести текст", callback_data="translate")],
         [InlineKeyboardButton("🎙 Голосовой режим", callback_data="voice_mode")],
         [InlineKeyboardButton("🌐 Переключить язык (временно недоступно)", callback_data="change_language")],
@@ -76,6 +77,10 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 /image Замок в стиле стимпанк под луной
 
 Модель: DALL·E 3. Размер: 1024x1024""",
+        "analyze_help": """📄 Чтобы проанализировать документ, отправь PDF, DOCX или TXT с подписью:
+/analyze Выдели главные идеи
+
+Если нет подписи — будет сделано краткое резюме содержимого документа.""",
         "voice_mode": "🎙 Голосовой режим пока в разработке...",
         "change_language": "🌐 Переключение языка будет доступно позже. Сейчас доступен только русский язык.",
         "premium_mode": "💎 Премиум-режим будет доступен в следующем обновлении.",
