@@ -65,12 +65,9 @@ async def handle_check(request):
 async def main():
     await app.initialize()
 
-    # Устанавливаем команды Telegram
+    # Удалены команды ask, image, translate — только /menu
     await app.bot.set_my_commands([
-        BotCommand("menu", "📋 Главное меню AniAI"),
-        BotCommand("ask", "🧠 Задать вопрос"),
-        BotCommand("translate", "🌍 Перевести текст"),
-        BotCommand("image", "🎨 Создать изображение"),
+        BotCommand("menu", "📋 Главное меню AniAI")
     ])
 
     await app.bot.set_webhook(url=WEBHOOK_URL)
