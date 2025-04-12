@@ -1,13 +1,12 @@
 import os
 from telegram import Update
-from telegram.ext import ContextTypes
+from telegram.ext import ContextTypes, MessageHandler, filters
 from openai import OpenAI
 import fitz  # PyMuPDF
 import docx
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Чтение PDF
 def read_pdf(file_path):
     text = ""
     with fitz.open(file_path) as doc:
@@ -15,12 +14,10 @@ def read_pdf(file_path):
             text += page.get_text()
     return text
 
-# Чтение DOCX
 def read_docx(file_path):
     doc = docx.Document(file_path)
     return "\n".join([para.text for para in doc.paragraphs])
 
-# Чтение TXT
 def read_txt(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
         return f.read()
@@ -42,6 +39,8 @@ async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
     file_path = f"/tmp/{file.file_unique_id}{file_ext}"
     await new_file.download_to_drive(file_path)
 
+    await update.message.reply_text("⏳ Анализируем документ...")
+
     try:
         if file_ext == ".pdf":
             text = read_pdf(file_path)
@@ -53,19 +52,21 @@ async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Ошибка чтения файла: {e}")
         return
 
+    if len(text) > 3000:
+        await update.message.reply_text("⚠️ Документ слишком большой. Пожалуйста, сократите до 3000 символов.")
+        return
+
     prompt = update.message.caption or "Выдели главные идеи и сделай краткое резюме:"
-    content = text[:3000]
 
     try:
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "Ты помощник, анализирующий документы."},
-                {"role": "user", "content": f"{prompt}\n{content}"}
+                {"role": "user", "content": f"{prompt}\n{text}"}
             ]
         )
         result = response.choices[0].message.content
         await update.message.reply_text(f"📊 Результат анализа:\n{result}")
     except Exception as e:
         await update.message.reply_text(f"Ошибка OpenAI: {e}")
-
