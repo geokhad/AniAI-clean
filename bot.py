@@ -2,14 +2,16 @@ import os
 import logging
 import asyncio
 from dotenv import load_dotenv
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
+from telegram import Update, Bot
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 from aiohttp import web
 from ai.chat import handle_ask
 from handlers.start import start
 from handlers.menu import menu, handle_button
+from handlers.translate import translate
 import nest_asyncio
 
+# Логи
 logging.basicConfig(level=logging.INFO)
 nest_asyncio.apply()
 load_dotenv()
@@ -21,17 +23,21 @@ HOST = "0.0.0.0"
 
 app = ApplicationBuilder().token(TOKEN).build()
 
+# Обработчики команд
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("ask", handle_ask))
 app.add_handler(CommandHandler("menu", menu))
+app.add_handler(CommandHandler("translate", translate))
 app.add_handler(CallbackQueryHandler(handle_button))
 
+# aiohttp веб-сервер
 async def handle_telegram(request):
     data = await request.json()
     update = Update.de_json(data, app.bot)
     await app.process_update(update)
     return web.Response(text="OK")
 
+# Проверка доступности
 async def handle_check(request):
     return web.Response(text="AniAI on Railway ✅")
 
