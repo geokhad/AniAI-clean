@@ -1,7 +1,5 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
-
-# Импорт глобальных состояний из state.py
 from handlers.state import active_ask, active_translators, active_image
 
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -46,7 +44,6 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await menu(update, context)
         return
 
-    # Активируем режимы
     if query.data == "gpt_help":
         active_ask.add(user_id)
         await context.bot.send_message(chat_id=query.message.chat.id, text="🧠 Просто задай вопрос, и AniAI ответит. Например: «Объясни квантовую запутанность простыми словами»")
@@ -64,13 +61,13 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if query.data == "affiliate":
         text = (
-            "🤝 **Партнёрская программа AniAI**\n\n"
+            "🤝 <b>Партнёрская программа AniAI</b>\n\n"
             "Приглашай пользователей — получай % от всех их покупок в течение 1 месяца.\n\n"
             "📌 Твоя реферальная ссылка:\n"
-            "https://t.me/AniAI_newbot?start=ref\n\n"
+            "<code>https://t.me/AniAI_newbot?start=ref</code>\n\n"
             "Чем больше пользователей перейдёт — тем выше твой доход 💸"
         )
-        await context.bot.send_message(chat_id=query.message.chat.id, text=text, parse_mode="Markdown")
+        await context.bot.send_message(chat_id=query.message.chat.id, text=text, parse_mode="HTML")
         return
 
     responses = {
