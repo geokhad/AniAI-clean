@@ -39,16 +39,14 @@ app = ApplicationBuilder().token(TOKEN).build()
 
 # Обработчики команд
 app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler("ask", handle_ask))
 app.add_handler(CommandHandler("menu", menu))
-app.add_handler(CommandHandler("translate", translate))
-app.add_handler(CommandHandler("image", generate_image))
 
-# Обработчики интерактивных кнопок и документов
+# Обработчики кнопок, документов и функционала
+app.add_handler(CommandHandler("ask", handle_ask))            # оставлен для совместимости
+app.add_handler(CommandHandler("translate", translate))       # оставлен для совместимости
+app.add_handler(CommandHandler("image", generate_image))      # оставлен для совместимости
 app.add_handler(CallbackQueryHandler(handle_button))
 app.add_handler(MessageHandler(filters.Document.ALL, analyze))
-
-# Универсальный обработчик текстовых сообщений
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
 
 # Webhook-сервер
@@ -65,7 +63,7 @@ async def handle_check(request):
 async def main():
     await app.initialize()
 
-    # Удалены команды ask, image, translate — только /menu
+    # Оставляем только одну команду в Telegram
     await app.bot.set_my_commands([
         BotCommand("menu", "📋 Главное меню AniAI")
     ])

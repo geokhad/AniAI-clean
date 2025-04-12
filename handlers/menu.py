@@ -14,6 +14,7 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("🎙 Голосовой режим", callback_data="voice_mode")],
         [InlineKeyboardButton("🌐 Переключить язык (временно недоступно)", callback_data="change_language")],
         [InlineKeyboardButton("💎 Премиум режим", callback_data="premium_mode")],
+        [InlineKeyboardButton("🤝 Партнёрская программа", callback_data="affiliate")],
         [InlineKeyboardButton("✍️ Оставить отзыв", callback_data="feedback")],
     ]
     await context.bot.send_message(
@@ -59,6 +60,17 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if query.data == "translate":
         active_translators.add(user_id)
         await context.bot.send_message(chat_id=query.message.chat.id, text="🌍 Введи текст для перевода.")
+        return
+
+    if query.data == "affiliate":
+        text = (
+            "🤝 **Партнёрская программа AniAI**\n\n"
+            "Приглашай пользователей — получай % от всех их покупок в течение 1 месяца.\n\n"
+            "📌 Твоя реферальная ссылка:\n"
+            "https://t.me/AniAI_newbot?start=ref\n\n"
+            "Чем больше пользователей перейдёт — тем выше твой доход 💸"
+        )
+        await context.bot.send_message(chat_id=query.message.chat.id, text=text, parse_mode="Markdown")
         return
 
     responses = {
