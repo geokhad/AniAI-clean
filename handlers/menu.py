@@ -1,10 +1,9 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 
-# Списки активных пользователей в режимах
-active_ask = set()
-active_image = set()
-active_translate = set()
+# Импорт активных состояний из модулей
+from handlers.translate import active_translators
+from handlers.image import active_image
 
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
@@ -48,23 +47,19 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await menu(update, context)
         return
 
-    # Включаем режимы (эмуляция ввода команд)
-    if query.data == "gpt_help":
-        active_ask.add(user_id)
-        await context.bot.send_message(chat_id=query.message.chat.id, text="✍️ Напиши свой вопрос, AniAI ответит.")
-        return
-
+    # Активируем режимы
     if query.data == "image_help":
         active_image.add(user_id)
         await context.bot.send_message(chat_id=query.message.chat.id, text="📸 Опиши, что нужно изобразить.")
         return
 
     if query.data == "translate":
-        active_translate.add(user_id)
+        active_translators.add(user_id)
         await context.bot.send_message(chat_id=query.message.chat.id, text="🌍 Введи текст для перевода.")
         return
 
     responses = {
+        "gpt_help": "🧠 Просто задай вопрос, и AniAI ответит. Например: «Объясни квантовую запутанность простыми словами»",
         "examples": (
             "📚 Примеры запросов:\n"
             "• Переведи текст на английский\n"
