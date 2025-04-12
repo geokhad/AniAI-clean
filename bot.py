@@ -9,6 +9,7 @@ from ai.chat import handle_ask
 from handlers.start import start
 from handlers.menu import menu, handle_button
 from handlers.translate import translate
+from handlers.image import generate_image
 import nest_asyncio
 
 # Логи
@@ -29,6 +30,8 @@ app.add_handler(CommandHandler("ask", handle_ask))
 app.add_handler(CommandHandler("menu", menu))
 app.add_handler(CommandHandler("translate", translate))
 app.add_handler(CallbackQueryHandler(handle_button))
+app.add_handler(CommandHandler("image", generate_image))
+
 
 # aiohttp веб-сервер
 async def handle_telegram(request):
