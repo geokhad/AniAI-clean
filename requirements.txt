@@ -5,3 +5,5 @@ oauth2client
 nest_asyncio
 python-dotenv
 aiohttp
+python-docx
+PyMuPDF
