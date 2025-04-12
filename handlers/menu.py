@@ -1,6 +1,11 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 
+# Списки активных пользователей в режимах
+active_ask = set()
+active_image = set()
+active_translate = set()
+
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("🧠 GPT-помощь", callback_data="gpt_help")],
@@ -23,6 +28,8 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
+    user_id = query.from_user.id
+
     if query.data == "go_menu":
         intro = (
             "🎉 Спасибо, что выбрал AniAI — интеллектуального ассистента, который поможет тебе в работе, учёбе и повседневной жизни!\n\n"
@@ -41,8 +48,23 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await menu(update, context)
         return
 
+    # Включаем режимы (эмуляция ввода команд)
+    if query.data == "gpt_help":
+        active_ask.add(user_id)
+        await context.bot.send_message(chat_id=query.message.chat.id, text="✍️ Напиши свой вопрос, AniAI ответит.")
+        return
+
+    if query.data == "image_help":
+        active_image.add(user_id)
+        await context.bot.send_message(chat_id=query.message.chat.id, text="📸 Опиши, что нужно изобразить.")
+        return
+
+    if query.data == "translate":
+        active_translate.add(user_id)
+        await context.bot.send_message(chat_id=query.message.chat.id, text="🌍 Введи текст для перевода.")
+        return
+
     responses = {
-        "gpt_help": "🧠 Просто задай вопрос, и AniAI ответит. Например: «Объясни квантовую запутанность простыми словами»",
         "examples": (
             "📚 Примеры запросов:\n"
             "• Переведи текст на английский\n"
@@ -51,11 +73,6 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "• Придумай описание для поста\n"
             "• Составь план статьи"
         ),
-        "translate": (
-            "🌍 Просто отправь текст — AniAI переведёт с русского на английский или наоборот.\n"
-            "📏 Лимит: до 3000 символов."
-        ),
-        "image_help": "📸 Напиши запрос — AniAI создаст изображение.\nНапример: «Замок в стиле стимпанк под луной»",
         "analyze_help": "📄 Прикрепи документ — AniAI выделит главное и сделает краткое резюме.",
         "voice_mode": "🎙 Голосовой режим в разработке. Поддержка аудио будет добавлена позже.",
         "change_language": "🌐 Переключение языка будет доступно в следующем обновлении.",

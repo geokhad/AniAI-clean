@@ -19,7 +19,7 @@ from ai.chat import handle_ask
 from handlers.start import start
 from handlers.menu import menu, handle_button
 from handlers.translate import translate, handle_translation_text
-from handlers.image import generate_image
+from handlers.image import generate_image, handle_image_prompt
 from handlers.analyze import analyze
 
 # Логи
@@ -39,10 +39,13 @@ app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("ask", handle_ask))
 app.add_handler(CommandHandler("menu", menu))
 app.add_handler(CommandHandler("translate", translate))
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_translation_text))  # автообработка после /translate
 app.add_handler(CommandHandler("image", generate_image))
 app.add_handler(CallbackQueryHandler(handle_button))
 app.add_handler(MessageHandler(filters.Document.ALL, analyze))
+
+# Текстовые сообщения (включая перевод и генерацию изображений)
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_translation_text))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_image_prompt))
 
 # Webhook сервер
 async def handle_telegram(request):
@@ -59,7 +62,6 @@ async def handle_check(request):
 async def main():
     await app.initialize()
 
-    # 🟢 Установка постоянного меню кнопок (в интерфейсе Telegram)
     await app.bot.set_my_commands([
         BotCommand("menu", "📋 Главное меню AniAI"),
         BotCommand("ask", "🧠 Задать вопрос"),
