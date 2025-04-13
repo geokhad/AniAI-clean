@@ -33,3 +33,7 @@ def log_gpt(user_id, full_name, question, answer, lang="auto"):
 def log_translation(user_id, full_name, source_text, translation):
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
     append_to_sheet("Translations", [str(user_id), full_name, source_text, translation, now])
+    
+def log_document_analysis(user_id, full_name, file_name, result):
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    append_to_sheet("Analyze", [str(user_id), full_name, file_name, result, now])

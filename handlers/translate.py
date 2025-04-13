@@ -1,4 +1,4 @@
-from telegram import Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 import os
 from openai import OpenAI
@@ -12,8 +12,11 @@ async def translate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     active_translators.add(user_id)
     await update.message.reply_text(
         "🌐 Введи текст для перевода.\n"
-        "AniAI будет автоматически переводить каждый введённый текст.\n"
-        "Чтобы выйти из режима перевода — напиши /menu."
+        "AniAI будет автоматически переводить каждый введённый текст.\n\n"
+        "📋 Чтобы выйти из режима перевода — нажми кнопку ниже или напиши /menu.",
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("📋 Главное меню", callback_data="go_menu")]
+        ])
     )
 
 async def handle_translation_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -23,6 +26,10 @@ async def handle_translation_text(update: Update, context: ContextTypes.DEFAULT_
         return
 
     text = update.message.text.strip()
+
+    if not text:
+        await update.message.reply_text("❗ Пожалуйста, введи текст для перевода.")
+        return
 
     if len(text) > 3000:
         await update.message.reply_text("✂️ Слишком много символов. Пожалуйста, отправь до 3000 символов.")
@@ -51,4 +58,5 @@ async def handle_translation_text(update: Update, context: ContextTypes.DEFAULT_
 
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка при переводе:\n{e}")
-    # ❌ НЕ удаляем active_translators.discard(user_id) — сохраняем режим
+
+    # ⚠️ Не сбрасываем active_translators — режим остаётся активным

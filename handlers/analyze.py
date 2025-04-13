@@ -4,8 +4,8 @@ from telegram.ext import ContextTypes
 from openai import OpenAI
 import fitz  # PyMuPDF
 import docx
-from handlers.state import active_analyzers  # ✅ Добавлено
-from utils.google_sheets import log_document_analysis  # ✅ Добавлено
+from handlers.state import active_analyzers  # ✅ Поточный режим
+from utils.google_sheets import log_document_analysis  # ✅ Логирование
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -26,7 +26,7 @@ def read_txt(file_path):
 
 async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    active_analyzers.add(user_id)
+    active_analyzers.add(user_id)  # ✅ Входим в режим анализа
 
     if not update.message.document:
         await update.message.reply_text("📎 Пожалуйста, прикрепи документ (PDF, DOCX или TXT).")
@@ -54,11 +54,15 @@ async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             text = read_txt(file_path)
     except Exception as e:
-        await update.message.reply_text(f"Ошибка чтения файла: {e}")
+        await update.message.reply_text(f"⚠️ Ошибка при чтении файла: {e}")
+        return
+
+    if not text.strip():
+        await update.message.reply_text("⚠️ Не удалось извлечь текст из документа.")
         return
 
     if len(text) > 3000:
-        await update.message.reply_text("⚠️ Документ слишком большой. Пожалуйста, сократите до 3000 символов.")
+        await update.message.reply_text("⚠️ Документ слишком большой. Пожалуйста, сократи его до 3000 символов.")
         return
 
     prompt = update.message.caption or "Выдели главные идеи и сделай краткое резюме:"
@@ -83,4 +87,6 @@ async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
     except Exception as e:
-        await update.message.reply_text(f"Ошибка OpenAI: {e}")
+        await update.message.reply_text(f"⚠️ Ошибка при анализе документа: {e}")
+
+    # ⚠️ Не выходим из режима — можно продолжать загружать документы
