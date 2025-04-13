@@ -2,7 +2,8 @@ from telegram import Update
 from telegram.ext import ContextTypes
 import os
 from openai import OpenAI
-from handlers.state import active_ask  # ✅ Исправлено
+from handlers.state import active_ask  # ✅ Состояние
+from utils.google_sheets import log_gpt  # ✅ Добавлено логирование
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -26,9 +27,10 @@ async def handle_gpt_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     prompt = update.message.text.strip()
     await send_gpt_response(update, prompt)
 
-    # Режим GPT-помощи остаётся активным для последующих запросов
-
 async def send_gpt_response(update: Update, prompt: str):
+    user_id = update.effective_user.id
+    full_name = update.effective_user.full_name
+
     try:
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
@@ -36,5 +38,14 @@ async def send_gpt_response(update: Update, prompt: str):
         )
         answer = response.choices[0].message.content
         await update.message.reply_text(answer)
+
+        # ✅ Логирование запроса в Google Sheets
+        log_gpt(
+            user_id=user_id,
+            full_name=full_name,
+            question=prompt,
+            answer=answer
+        )
+
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка от GPT: {e}")
