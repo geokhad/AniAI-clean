@@ -8,7 +8,8 @@ from handlers.state import (
     active_tts,
     active_translators,
     active_imagers,
-    active_ask
+    active_ask,
+    notified_voice_users  # ✅ добавлено
 )
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -51,6 +52,18 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
 
         text = transcript.strip()
         await update.message.reply_text(f"📝 Распознано:\n{text}")
+
+        # ✅ Подсказка при первом голосовом вводе
+        if user_id not in notified_voice_users:
+            notified_voice_users.add(user_id)
+            await update.message.reply_text(
+                "💡 Кстати, ты можешь просто говорить команды:\n"
+                "• «Переведи это»\n"
+                "• «Сгенерируй картинку»\n"
+                "• «Озвучь текст»\n"
+                "• «Объясни что такое...»\n\n"
+                "Я сам включу нужный режим 🤖"
+            )
 
         # ✅ Распознавание голосовых команд
         lower = text.lower()
