@@ -3,13 +3,20 @@ import subprocess
 from telegram import Update
 from telegram.ext import ContextTypes
 from openai import OpenAI
-from handlers.state import clear_user_state, active_tts
+from handlers.state import (
+    clear_user_state,
+    active_tts,
+    active_translators,
+    active_imagers,
+    active_ask
+)
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # 🎙 Распознавание голосовых сообщений (Whisper API)
 async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
+    user_id = user.id
     voice = update.message.voice
 
     if not voice:
@@ -41,7 +48,37 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 file=audio_file,
                 response_format="text"
             )
-        await update.message.reply_text(f"📝 Распознано:\n{transcript}")
+
+        text = transcript.strip()
+        await update.message.reply_text(f"📝 Распознано:\n{text}")
+
+        # ✅ Распознавание голосовых команд
+        lower = text.lower()
+
+        if "переведи" in lower or "перевести" in lower:
+            clear_user_state(user_id)
+            active_translators.add(user_id)
+            await update.message.reply_text("🌍 Включён режим перевода. Введи текст для перевода.")
+            return
+
+        elif "картинку" in lower or "изображение" in lower or "сгенерируй" in lower:
+            clear_user_state(user_id)
+            active_imagers.add(user_id)
+            await update.message.reply_text("📸 Включён режим генерации. Опиши, что нужно изобразить.")
+            return
+
+        elif "озвучь" in lower or "прочитай" in lower:
+            clear_user_state(user_id)
+            active_tts.add(user_id)
+            await update.message.reply_text("🗣 Включён режим озвучки. Введи текст для преобразования в голос.")
+            return
+
+        elif "вопрос" in lower or "объясни" in lower or "что такое" in lower:
+            clear_user_state(user_id)
+            active_ask.add(user_id)
+            await update.message.reply_text("🧠 Включён режим GPT-помощи. Задай свой вопрос.")
+            return
+
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка распознавания речи: {e}")
 
