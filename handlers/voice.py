@@ -1,9 +1,9 @@
 import os
+import subprocess
 from telegram import Update
 from telegram.ext import ContextTypes
 from openai import OpenAI
-from handlers.state import clear_user_state, active_tts  # ✅ импортируем active_tts
-from pydub import AudioSegment
+from handlers.state import clear_user_state, active_tts
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -24,9 +24,14 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
     await file.download_to_drive(ogg_path)
 
     try:
-        AudioSegment.from_file(ogg_path).export(wav_path, format="wav", codec="pcm_s16le")
+        subprocess.run(
+            ["ffmpeg", "-y", "-i", ogg_path, "-ar", "16000", "-ac", "1", wav_path],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
     except Exception as e:
-        await update.message.reply_text(f"❌ Ошибка конвертации файла: {e}")
+        await update.message.reply_text(f"❌ Ошибка конвертации через ffmpeg: {e}")
         return
 
     try:
@@ -60,8 +65,6 @@ async def handle_tts_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     await handle_tts_playback(update, text)
-
-    # ❌ отключаем режим после одного использования
     active_tts.discard(user_id)
 
 # 🔊 Универсальная функция воспроизведения
