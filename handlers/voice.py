@@ -14,7 +14,7 @@ from handlers.state import (
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# 🎙 Распознавание голосовых сообщений
+# 🎙 Обработка голосового ввода
 async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     user_id = user.id
@@ -53,31 +53,32 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         text = transcript.strip()
         await update.message.reply_text(f"📝 Распознано:\n{text}")
 
-        # ✅ Подсказка один раз
+        # 💡 Подсказка голосовых команд (однократно)
         if user_id not in notified_voice_users:
             notified_voice_users.add(user_id)
             await update.message.reply_text(
-                "💡 Кстати, ты можешь просто говорить команды:\n"
-                "• «Переведи это», «Переведи на русский язык I love you»\n"
+                "💡 Ты можешь просто говорить команды:\n"
+                "• «Переведи на русский язык I love you»\n"
                 "• «Сгенерируй картинку»\n"
                 "• «Озвучь текст»\n"
-                "• «Объясни что такое...»"
+                "• «Объясни что такое...»\n\n"
+                "Я сам включу нужный режим 🤖"
             )
 
         lower = text.lower()
 
-        # ✅ Распознавание встроенного перевода: «переведи на русский язык I love you»
+        # ✅ Быстрый перевод с распознаванием языка
         if "переведи на русский язык" in lower:
-            prompt = text.lower().split("переведи на русский язык", 1)[-1].strip()
+            prompt = text.split("переведи на русский язык", 1)[-1].strip()
             await translate_and_reply(update, prompt, "на русский")
             return
 
         if "переведи на английский язык" in lower:
-            prompt = text.lower().split("переведи на английский язык", 1)[-1].strip()
+            prompt = text.split("переведи на английский язык", 1)[-1].strip()
             await translate_and_reply(update, prompt, "на английский")
             return
 
-        # ✅ Распознавание режимов
+        # ✅ Распознавание голосовых команд
         if "переведи" in lower or "перевести" in lower:
             clear_user_state(user_id)
             active_translators.add(user_id)
@@ -87,7 +88,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         elif "картинку" in lower or "изображение" in lower or "сгенерируй" in lower:
             clear_user_state(user_id)
             active_imagers.add(user_id)
-            await update.message.reply_text("📸 Включён режим генерации. Опиши картинку.")
+            await update.message.reply_text("📸 Включён режим генерации. Опиши изображение.")
             return
 
         elif "озвучь" in lower or "прочитай" in lower:
@@ -99,16 +100,19 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         elif "вопрос" in lower or "объясни" in lower or "что такое" in lower:
             clear_user_state(user_id)
             active_ask.add(user_id)
-            await update.message.reply_text("🧠 Включён режим GPT-помощи. Задай вопрос.")
+            await update.message.reply_text("🧠 Включён режим GPT. Задай свой вопрос.")
             return
 
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка распознавания речи: {e}")
 
-# 🔁 Вспомогательная функция для перевода
+# 🌍 Функция перевода с направлениями
 async def translate_and_reply(update: Update, text: str, direction: str):
     try:
-        system = "Переведи текст с английского на русский." if direction == "на русский" else "Переведи текст с русского на английский."
+        system = (
+            "Переведи текст с английского на русский." if direction == "на русский"
+            else "Переведи текст с русского на английский."
+        )
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -121,7 +125,7 @@ async def translate_and_reply(update: Update, text: str, direction: str):
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка перевода: {e}")
 
-# 📢 Озвучка текста через команду /tts
+# 📢 /tts
 async def handle_tts_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = " ".join(context.args)
     if not text:
@@ -129,24 +133,21 @@ async def handle_tts_request(update: Update, context: ContextTypes.DEFAULT_TYPE)
         return
     await handle_tts_playback(update, text)
 
-# 📢 Озвучка текста через кнопку
+# 📢 Озвучка через кнопку
 async def handle_tts_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id not in active_tts:
         return
-
     text = update.message.text.strip()
     if not text:
         await update.message.reply_text("⚠️ Пожалуйста, отправьте текст.")
         return
-
     await handle_tts_playback(update, text)
     active_tts.discard(user_id)
 
-# 🔊 Воспроизведение озвучки
+# 🔊 Озвучка текста
 async def handle_tts_playback(update: Update, text: str):
     await update.message.reply_text("🎧 Генерирую голосовое сообщение...")
-
     try:
         response = client.audio.speech.create(
             model="tts-1-hd",
@@ -156,9 +157,7 @@ async def handle_tts_playback(update: Update, text: str):
         ogg_path = f"/tmp/tts-{update.effective_user.id}.ogg"
         with open(ogg_path, "wb") as f:
             f.write(response.content)
-
         with open(ogg_path, "rb") as audio_file:
             await update.message.reply_voice(voice=audio_file, caption="🗣 Озвучка готова!")
-
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка TTS: {e}")
