@@ -1,9 +1,11 @@
 import os
 from telegram import Update
-from telegram.ext import ContextTypes, MessageHandler, filters
+from telegram.ext import ContextTypes
 from openai import OpenAI
 import fitz  # PyMuPDF
 import docx
+from handlers.state import active_analyzers  # ✅ Добавлено
+from utils.google_sheets import log_document_analysis  # ✅ Добавлено
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -23,6 +25,9 @@ def read_txt(file_path):
         return f.read()
 
 async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    active_analyzers.add(user_id)
+
     if not update.message.document:
         await update.message.reply_text("📎 Пожалуйста, прикрепи документ (PDF, DOCX или TXT).")
         return
@@ -68,5 +73,14 @@ async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         result = response.choices[0].message.content
         await update.message.reply_text(f"📊 Результат анализа:\n{result}")
+
+        # ✅ Логирование
+        log_document_analysis(
+            user_id=user_id,
+            full_name=update.effective_user.full_name,
+            file_name=file.file_name,
+            result=result
+        )
+
     except Exception as e:
         await update.message.reply_text(f"Ошибка OpenAI: {e}")

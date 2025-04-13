@@ -12,7 +12,8 @@ async def translate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     active_translators.add(user_id)
     await update.message.reply_text(
         "🌐 Введи текст для перевода.\n"
-        "AniAI автоматически определит язык и сделает перевод на русский или английский."
+        "AniAI будет автоматически переводить каждый введённый текст.\n"
+        "Чтобы выйти из режима перевода — напиши /menu."
     )
 
 async def handle_translation_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -50,5 +51,4 @@ async def handle_translation_text(update: Update, context: ContextTypes.DEFAULT_
 
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка при переводе:\n{e}")
-    finally:
-        active_translators.discard(user_id)
+    # ❌ НЕ удаляем active_translators.discard(user_id) — сохраняем режим

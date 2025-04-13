@@ -1,6 +1,12 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
-from handlers.state import active_ask, active_translators, active_image
+from handlers.state import (
+    active_ask,
+    active_translators,
+    active_imagers,
+    active_analyzers,
+    clear_user_state
+)
 
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
@@ -25,6 +31,10 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     user_id = query.from_user.id
+
+    # Сброс всех состояний при переходе в меню или общие разделы
+    if query.data in ["go_menu", "examples", "voice_mode", "change_language", "premium_mode", "feedback"]:
+        clear_user_state(user_id)
 
     if query.data == "go_menu":
         intro = (
@@ -53,10 +63,18 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if query.data == "image_help":
-        active_image.add(user_id)
+        active_imagers.add(user_id)
         await context.bot.send_message(
             chat_id=query.message.chat.id,
             text="📸 Опиши, что нужно изобразить."
+        )
+        return
+
+    if query.data == "analyze_help":
+        active_analyzers.add(user_id)
+        await context.bot.send_message(
+            chat_id=query.message.chat.id,
+            text="📄 Прикрепи документ (PDF, DOCX, TXT) — и я сделаю краткое резюме."
         )
         return
 
@@ -88,7 +106,6 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "• Придумай описание для поста\n"
             "• Составь план статьи"
         ),
-        "analyze_help": "📄 Прикрепи документ — AniAI выделит главное и сделает краткое резюме.",
         "voice_mode": "🎙 Голосовой режим в разработке. Поддержка аудио будет добавлена позже.",
         "change_language": "🌐 Переключение языка будет доступно в следующем обновлении.",
         "premium_mode": "💎 Премиум-режим включает GPT-4 и расширенные лимиты. Скоро будет доступен.",

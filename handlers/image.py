@@ -2,24 +2,19 @@ from telegram import Update
 from telegram.ext import ContextTypes
 import os
 from openai import OpenAI
+from handlers.state import active_image  # ✅ Вынесли в отдельный state.py
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Пользователи, ожидающие генерации изображения
-active_image = set()
-
 async def generate_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    prompt = " ".join(context.args)
-    if not prompt:
-        await update.message.reply_text("❗ Пожалуйста, укажи описание после команды /image.")
-        return
-
-    await create_image(update, prompt)
+    user_id = update.effective_user.id
+    active_image.add(user_id)  # ✅ Включаем режим
+    await update.message.reply_text("📸 Опиши, что нужно изобразить.")
 
 async def handle_image_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id not in active_image:
-        return  # Пользователь не активировал режим генерации
+        return
 
     prompt = update.message.text.strip()
     if not prompt:
@@ -27,7 +22,9 @@ async def handle_image_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE
         return
 
     await create_image(update, prompt)
-    active_image.discard(user_id)
+
+    # ❌ Больше не удаляем — остаётся активным режим генерации
+    # active_image.discard(user_id)
 
 async def create_image(update: Update, prompt: str):
     try:

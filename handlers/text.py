@@ -9,10 +9,15 @@ from handlers.chat import handle_gpt_text
 async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
 
-    # Приоритеты обработки:
+    # 🔁 Приоритет: перевод > изображение > GPT
     if user_id in active_translators:
         await handle_translation_text(update, context)
-    elif user_id in active_image:
+        return
+
+    if user_id in active_image:
         await handle_image_prompt(update, context)
-    elif user_id in active_ask:
+        return
+
+    if user_id in active_ask:
         await handle_gpt_text(update, context)
+        return

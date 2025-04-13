@@ -22,6 +22,7 @@ from handlers.translate import translate
 from handlers.image import generate_image
 from handlers.analyze import analyze
 from handlers.text import handle_text_message  # Универсальный обработчик текстов
+from handlers.state import clear_user_state  # Добавлено для сброса состояний (если используем)
 
 # Логи
 logging.basicConfig(level=logging.INFO)
@@ -41,12 +42,16 @@ app = ApplicationBuilder().token(TOKEN).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("menu", menu))
 
-# Обработчики кнопок, документов и функционала
-app.add_handler(CommandHandler("ask", handle_ask))            # оставлен для совместимости
-app.add_handler(CommandHandler("translate", translate))       # оставлен для совместимости
-app.add_handler(CommandHandler("image", generate_image))      # оставлен для совместимости
+# Обработчики кнопок и функциональных режимов
+app.add_handler(CommandHandler("ask", handle_ask))            # старый режим GPT
+app.add_handler(CommandHandler("translate", translate))       # старый режим перевода
+app.add_handler(CommandHandler("image", generate_image))      # старый режим генерации
 app.add_handler(CallbackQueryHandler(handle_button))
+
+# Обработчик документов — PDF, DOCX, TXT
 app.add_handler(MessageHandler(filters.Document.ALL, analyze))
+
+# Универсальный обработчик текста — GPT, перевод, изображение
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
 
 # Webhook-сервер
@@ -63,7 +68,7 @@ async def handle_check(request):
 async def main():
     await app.initialize()
 
-    # Оставляем только одну команду в Telegram
+    # Установка команды для Telegram
     await app.bot.set_my_commands([
         BotCommand("menu", "📋 Главное меню AniAI")
     ])
