@@ -29,3 +29,7 @@ def log_subscriber(user_id, full_name, username):
 def log_gpt(user_id, full_name, question, answer, lang="auto"):
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
     append_to_sheet("GPT", [str(user_id), full_name, question, answer, lang, now])
+
+def log_translation(user_id, full_name, source_text, translation):
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    append_to_sheet("Translations", [str(user_id), full_name, source_text, translation, now])
