@@ -11,7 +11,6 @@ from handlers.state import (
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("🧠 GPT-помощь", callback_data="gpt_help")],
-        [InlineKeyboardButton("📚 Примеры запросов", callback_data="examples")],
         [InlineKeyboardButton("📸 Сгенерировать изображение", callback_data="image_help")],
         [InlineKeyboardButton("📄 Проанализировать документ", callback_data="analyze_help")],
         [InlineKeyboardButton("🌍 Перевести текст", callback_data="translate")],
@@ -33,7 +32,7 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = query.from_user.id
 
     # Сброс всех состояний при переходе в меню или общие разделы
-    if query.data in ["go_menu", "examples", "voice_mode", "change_language", "premium_mode", "feedback"]:
+    if query.data in ["go_menu", "voice_mode", "change_language", "premium_mode", "feedback"]:
         clear_user_state(user_id)
 
     if query.data == "go_menu":
@@ -98,14 +97,6 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     responses = {
-        "examples": (
-            "📚 Примеры запросов:\n"
-            "• Переведи текст на английский\n"
-            "• Сгенерируй изображение замка\n"
-            "• Объясни теорему Ферма\n"
-            "• Придумай описание для поста\n"
-            "• Составь план статьи"
-        ),
         "voice_mode": "🎙 Голосовой режим в разработке. Поддержка аудио будет добавлена позже.",
         "change_language": "🌐 Переключение языка будет доступно в следующем обновлении.",
         "premium_mode": "💎 Премиум-режим включает GPT-4 и расширенные лимиты. Скоро будет доступен.",
