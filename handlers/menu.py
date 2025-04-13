@@ -97,7 +97,15 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     responses = {
-        "voice_mode": "🎙 Голосовой режим в разработке. Поддержка аудио будет добавлена позже.",
+        "voice_mode": (
+            "🎙 <b>Голосовой режим AniAI</b>\n\n"
+            "🔊 <b>1. Распознавание речи:</b>\n"
+            "• Просто отправь голосовое сообщение — я его расшифрую и верну текст.\n\n"
+            "🗣 <b>2. Озвучка текста:</b>\n"
+            "• Напиши команду: <code>/tts Привет, как дела?</code>\n"
+            "• AniAI озвучит сообщение голосом модели <b>nova</b> (OpenAI TTS-1).\n\n"
+            "⚙️ Включены технологии Whisper и TTS от OpenAI."
+        ),
         "change_language": "🌐 Переключение языка будет доступно в следующем обновлении.",
         "premium_mode": "💎 Премиум-режим включает GPT-4 и расширенные лимиты. Скоро будет доступен.",
         "feedback": "📬 Оставьте отзыв или пожелание здесь: @AniAI_supportbot"
@@ -105,6 +113,6 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     response = responses.get(query.data)
     if response:
-        await context.bot.send_message(chat_id=query.message.chat.id, text=response)
+        await context.bot.send_message(chat_id=query.message.chat.id, text=response, parse_mode="HTML")
     else:
         await context.bot.send_message(chat_id=query.message.chat.id, text="⚙️ Функция в разработке.")
