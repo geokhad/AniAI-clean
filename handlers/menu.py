@@ -46,17 +46,26 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if query.data == "gpt_help":
         active_ask.add(user_id)
-        await context.bot.send_message(chat_id=query.message.chat.id, text="🧠 Просто задай вопрос, и AniAI ответит. Например: «Объясни квантовую запутанность простыми словами»")
+        await context.bot.send_message(
+            chat_id=query.message.chat.id,
+            text="🧠 Просто задай вопрос, и AniAI ответит. Например: «Объясни квантовую запутанность простыми словами»"
+        )
         return
 
     if query.data == "image_help":
         active_image.add(user_id)
-        await context.bot.send_message(chat_id=query.message.chat.id, text="📸 Опиши, что нужно изобразить.")
+        await context.bot.send_message(
+            chat_id=query.message.chat.id,
+            text="📸 Опиши, что нужно изобразить."
+        )
         return
 
     if query.data == "translate":
         active_translators.add(user_id)
-        await context.bot.send_message(chat_id=query.message.chat.id, text="🌍 Введи текст для перевода.")
+        await context.bot.send_message(
+            chat_id=query.message.chat.id,
+            text="🌍 Введи текст для перевода."
+        )
         return
 
     if query.data == "affiliate":

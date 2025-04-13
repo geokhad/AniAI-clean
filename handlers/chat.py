@@ -12,6 +12,10 @@ async def handle_ask(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❓ Введите вопрос после команды /ask")
         return
 
+    # Активируем режим GPT-помощи
+    user_id = update.effective_user.id
+    active_ask.add(user_id)
+
     await send_gpt_response(update, prompt)
 
 async def handle_gpt_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -21,7 +25,8 @@ async def handle_gpt_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     prompt = update.message.text.strip()
     await send_gpt_response(update, prompt)
-    active_ask.discard(user_id)
+
+    # Режим GPT-помощи остаётся активным для последующих запросов
 
 async def send_gpt_response(update: Update, prompt: str):
     try:
