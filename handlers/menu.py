@@ -5,7 +5,8 @@ from handlers.state import (
     active_translators,
     active_imagers,
     active_analyzers,
-    clear_user_state
+    clear_user_state,
+    active_tts  # ✅ добавлено
 )
 
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -14,7 +15,8 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("📸 Сгенерировать изображение", callback_data="image_help")],
         [InlineKeyboardButton("📄 Проанализировать документ", callback_data="analyze_help")],
         [InlineKeyboardButton("🌍 Перевести текст", callback_data="translate")],
-        [InlineKeyboardButton("🎙 Голосовой режим", callback_data="voice_mode")],
+        [InlineKeyboardButton("🎙 Голосовой ввод", callback_data="voice_mode")],
+        [InlineKeyboardButton("🗣 Озвучить текст", callback_data="tts_mode")],  # ✅ новая кнопка
         [InlineKeyboardButton("🌐 Переключить язык (временно недоступно)", callback_data="change_language")],
         [InlineKeyboardButton("💎 Премиум режим", callback_data="premium_mode")],
         [InlineKeyboardButton("🤝 Партнёрская программа", callback_data="affiliate")],
@@ -31,8 +33,7 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     user_id = query.from_user.id
 
-    # Сброс всех состояний при переходе в меню или общие разделы
-    if query.data in ["go_menu", "voice_mode", "change_language", "premium_mode", "feedback"]:
+    if query.data in ["go_menu", "voice_mode", "tts_mode", "change_language", "premium_mode", "feedback"]:
         clear_user_state(user_id)
 
     if query.data == "go_menu":
@@ -85,6 +86,14 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
+    if query.data == "tts_mode":
+        active_tts.add(user_id)
+        await context.bot.send_message(
+            chat_id=query.message.chat.id,
+            text="🗣 Введи текст, который нужно озвучить. Я превращу его в голосовое сообщение."
+        )
+        return
+
     if query.data == "affiliate":
         text = (
             "🤝 <b>Партнёрская программа AniAI</b>\n\n"
@@ -99,12 +108,8 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     responses = {
         "voice_mode": (
             "🎙 <b>Голосовой режим AniAI</b>\n\n"
-            "🔊 <b>1. Распознавание речи:</b>\n"
-            "• Просто отправь голосовое сообщение — я его расшифрую и верну текст.\n\n"
-            "🗣 <b>2. Озвучка текста:</b>\n"
-            "• Напиши команду: <code>/tts Привет, как дела?</code>\n"
-            "• AniAI озвучит сообщение голосом модели <b>nova</b> (OpenAI TTS-1).\n\n"
-            "⚙️ Включены технологии Whisper и TTS от OpenAI."
+            "🔊 Просто отправь голосовое сообщение — я его расшифрую с помощью Whisper.\n"
+            "Чтобы выйти из режима, нажми /menu."
         ),
         "change_language": "🌐 Переключение языка будет доступно в следующем обновлении.",
         "premium_mode": "💎 Премиум-режим включает GPT-4 и расширенные лимиты. Скоро будет доступен.",

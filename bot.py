@@ -21,8 +21,9 @@ from handlers.menu import menu, handle_button
 from handlers.translate import translate
 from handlers.image import generate_image
 from handlers.analyze import analyze
-from handlers.text import handle_text_message  # Универсальный обработчик текстов
-from handlers.state import clear_user_state  # Добавлено для сброса состояний (если используем)
+from handlers.text import handle_text_message
+from handlers.state import clear_user_state
+from handlers.voice import handle_voice_message, handle_tts_request  # ✅ Голосовой режим
 
 # Логи
 logging.basicConfig(level=logging.INFO)
@@ -41,18 +42,18 @@ app = ApplicationBuilder().token(TOKEN).build()
 # Обработчики команд
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("menu", menu))
+app.add_handler(CommandHandler("ask", handle_ask))            # GPT
+app.add_handler(CommandHandler("translate", translate))       # Перевод
+app.add_handler(CommandHandler("image", generate_image))      # Генерация изображений
+# app.add_handler(CommandHandler("tts", handle_tts_request))  # ⛔️ Больше не нужен
 
-# Обработчики кнопок и функциональных режимов
-app.add_handler(CommandHandler("ask", handle_ask))            # старый режим GPT
-app.add_handler(CommandHandler("translate", translate))       # старый режим перевода
-app.add_handler(CommandHandler("image", generate_image))      # старый режим генерации
+# Обработчики кнопок и меню
 app.add_handler(CallbackQueryHandler(handle_button))
 
-# Обработчик документов — PDF, DOCX, TXT
-app.add_handler(MessageHandler(filters.Document.ALL, analyze))
-
-# Универсальный обработчик текста — GPT, перевод, изображение
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
+# Обработчики сообщений
+app.add_handler(MessageHandler(filters.Document.ALL, analyze))                             # Документы
+app.add_handler(MessageHandler(filters.VOICE, handle_voice_message))                      # 🎙 Голосовые сообщения
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))     # Текстовые сообщения
 
 # Webhook-сервер
 async def handle_telegram(request):
@@ -68,7 +69,7 @@ async def handle_check(request):
 async def main():
     await app.initialize()
 
-    # Установка команды для Telegram
+    # Команды в Telegram (оставляем только главное меню)
     await app.bot.set_my_commands([
         BotCommand("menu", "📋 Главное меню AniAI")
     ])

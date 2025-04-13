@@ -2,7 +2,7 @@ import os
 from telegram import Update
 from telegram.ext import ContextTypes
 from openai import OpenAI
-from handlers.state import clear_user_state
+from handlers.state import clear_user_state, active_tts  # ✅ импортируем active_tts
 from pydub import AudioSegment
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -24,7 +24,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
     await file.download_to_drive(ogg_path)
 
     try:
-        AudioSegment.from_file(ogg_path).export(wav_path, format="wav")
+        AudioSegment.from_file(ogg_path).export(wav_path, format="wav", codec="pcm_s16le")
     except Exception as e:
         await update.message.reply_text(f"❌ Ошибка конвертации файла: {e}")
         return
@@ -40,13 +40,32 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка распознавания речи: {e}")
 
-# 📢 Озвучка текста через OpenAI TTS-1-HD
+# 📢 Озвучка текста через команду /tts
 async def handle_tts_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = " ".join(context.args)
     if not text:
         await update.message.reply_text("🔊 Введите текст после команды /tts, чтобы озвучить.")
         return
+    await handle_tts_playback(update, text)
 
+# 📢 Озвучка текста через режим (по кнопке)
+async def handle_tts_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if user_id not in active_tts:
+        return
+
+    text = update.message.text.strip()
+    if not text:
+        await update.message.reply_text("⚠️ Пожалуйста, отправьте текст для озвучивания.")
+        return
+
+    await handle_tts_playback(update, text)
+
+    # ❌ отключаем режим после одного использования
+    active_tts.discard(user_id)
+
+# 🔊 Универсальная функция воспроизведения
+async def handle_tts_playback(update: Update, text: str):
     await update.message.reply_text("🎧 Генерирую голосовое сообщение...")
 
     try:
@@ -64,4 +83,3 @@ async def handle_tts_request(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка TTS: {e}")
-
