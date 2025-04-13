@@ -15,7 +15,7 @@ from telegram.ext import (
 import nest_asyncio
 
 # Импорты обработчиков
-from ai.chat import handle_ask
+from handlers.chat import handle_ask
 from handlers.start import start
 from handlers.menu import menu, handle_button
 from handlers.translate import translate
