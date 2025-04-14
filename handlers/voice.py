@@ -69,13 +69,14 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
 
         lower = text.lower()
 
-        if "переведи на русский язык" in lower:
-            prompt = text.split("переведи на русский язык", 1)[-1].strip()
+        # 🔄 Расширенное распознавание команд перевода
+        if "перевести на русский" in lower or "переведи на русский" in lower:
+            prompt = text.split("на русский", 1)[-1].strip()
             await translate_and_reply(update, prompt, "на русский")
             return
 
-        if "переведи на английский язык" in lower:
-            prompt = text.split("переведи на английский язык", 1)[-1].strip()
+        if "перевести на английский" in lower or "переведи на английский" in lower:
+            prompt = text.split("на английский", 1)[-1].strip()
             await translate_and_reply(update, prompt, "на английский")
             return
 
