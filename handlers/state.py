@@ -1,4 +1,6 @@
-# Активные режимы
+# handlers/state.py
+
+# ✅ Активные режимы
 active_translators = set()
 active_imagers = set()
 active_analyzers = set()

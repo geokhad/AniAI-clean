@@ -11,6 +11,7 @@ from handlers.state import (
     active_ask,
     notified_voice_users
 )
+from utils.google_sheets import log_translation  # ✅ если используется лог
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -34,12 +35,10 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
     try:
         subprocess.run(
             ["ffmpeg", "-y", "-i", ogg_path, "-ar", "16000", "-ac", "1", wav_path],
-            check=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+            check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
         )
     except Exception as e:
-        await update.message.reply_text(f"❌ Ошибка конвертации через ffmpeg: {e}")
+        await update.message.reply_text(f"❌ Ошибка ffmpeg: {e}")
         return
 
     try:
@@ -106,58 +105,5 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка распознавания речи: {e}")
 
-# 🌍 Функция перевода с направлениями
-async def translate_and_reply(update: Update, text: str, direction: str):
-    try:
-        system = (
-            "Переведи текст с английского на русский." if direction == "на русский"
-            else "Переведи текст с русского на английский."
-        )
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": text}
-            ]
-        )
-        translation = response.choices[0].message.content.strip()
-        await update.message.reply_text(f"🌍 Перевод:\n{translation}")
-    except Exception as e:
-        await update.message.reply_text(f"⚠️ Ошибка перевода: {e}")
-
-# 📢 /tts
-async def handle_tts_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = " ".join(context.args)
-    if not text:
-        await update.message.reply_text("🔊 Введите текст после команды /tts.")
-        return
-    await handle_tts_playback(update, text)
-
-# 📢 Озвучка через кнопку
-async def handle_tts_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    if user_id not in active_tts:
-        return
-    text = update.message.text.strip()
-    if not text:
-        await update.message.reply_text("⚠️ Пожалуйста, отправьте текст.")
-        return
-    await handle_tts_playback(update, text)
-    active_tts.discard(user_id)
-
-# 🔊 Озвучка текста
-async def handle_tts_playback(update: Update, text: str):
-    await update.message.reply_text("🎧 Генерирую голосовое сообщение...")
-    try:
-        response = client.audio.speech.create(
-            model="tts-1-hd",
-            voice="nova",
-            input=text
-        )
-        ogg_path = f"/tmp/tts-{update.effective_user.id}.ogg"
-        with open(ogg_path, "wb") as f:
-            f.write(response.content)
-        with open(ogg_path, "rb") as audio_file:
-            await update.message.reply_voice(voice=audio_file, caption="🗣 Озвучка готова!")
-    except Exception as e:
-        await update.message.reply_text(f"⚠️ Ошибка TTS: {e}")
+# 🌍 Переводчик на русский или английский
+async def translate_and_reply(update: Update, text: str,
