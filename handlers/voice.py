@@ -53,16 +53,23 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 response_format="text"
             )
         text = transcript.strip()
-        await update.message.reply_text(f"📝 Распознано:\n{text}")
+        await update.message.reply_text(f"📝 Распознано:
+{text}")
 
         if user_id not in notified_voice_users:
             notified_voice_users.add(user_id)
             await update.message.reply_text(
-                "💡 Ты можешь просто говорить команды:\n"
-                "• «Переведи на русский язык I love you»\n"
-                "• «Сгенерируй картинку»\n"
-                "• «Озвучь текст»\n"
-                "• «Объясни что такое...»\n\n"
+                "💡 Ты можешь просто говорить команды:
+"
+                "• «Переведи на русский язык I love you»
+"
+                "• «Сгенерируй картинку»
+"
+                "• «Озвучь текст»
+"
+                "• «Объясни что такое...»
+
+"
                 "Я сама включу нужный режим 🤖"
             )
 
@@ -97,13 +104,28 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         if any(word in lower for word in ["картинку", "изображение", "сгенерируй", "изобрази", "создай"]):
             clear_user_state(user_id)
             active_imagers.add(user_id)
-            await update.message.reply_text("🤖 Думаю...\n📸 Включён режим генерации. Опиши изображение.")
+            await update.message.reply_text("🤖 Думаю...
+📸 Включён режим генерации. Опиши изображение.")
             return
 
         if any(word in lower for word in ["объясни", "что такое", "вопрос"]):
             clear_user_state(user_id)
             active_ask.add(user_id)
             await update.message.reply_text("🧠 Включён режим GPT. Задай свой вопрос.")
+            return
+
+        # 🧠 Ответ на вопрос голосом
+        if text.endswith("?") or any(text.startswith(q) for q in ["почему", "зачем", "как", "что", "когда", "где"]):
+            await update.message.reply_text("🧠 Думаю над ответом...")
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "Ты ассистент, который отвечает на вопросы и говорит голосом."},
+                    {"role": "user", "content": text}
+                ]
+            )
+            answer = response.choices[0].message.content.strip()
+            await handle_tts_playback(update, answer)
             return
 
     except Exception as e:
@@ -121,7 +143,8 @@ async def translate_and_reply(update: Update, text: str, direction: str):
             ]
         )
         translation = response.choices[0].message.content.strip()
-        await update.message.reply_text(f"🌍 Перевод:\n{translation}")
+        await update.message.reply_text(f"🌍 Перевод:
+{translation}")
         log_translation(update.effective_user.id, update.effective_user.full_name, text, translation)
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка перевода: {e}")
