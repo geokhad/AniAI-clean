@@ -1,4 +1,3 @@
-
 import os
 import subprocess
 from telegram import Update
@@ -55,8 +54,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             )
 
         text = transcript.strip()
-        await update.message.reply_text(f"📝 Распознано:
-{text}")
+        await update.message.reply_text(f"📝 Распознано:\n{text}")
 
         if user_id not in notified_voice_users:
             notified_voice_users.add(user_id)
