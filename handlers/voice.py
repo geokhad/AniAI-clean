@@ -71,7 +71,6 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 "Я сама включу нужный режим 🤖"
             )
 
-        # 🧠 Авто-GPT для вопросительных конструкций
         if text.endswith("?") or any(q in lower for q in ["что", "зачем", "почему", "как", "когда", "где", "кто"]):
             await update.message.reply_text("🤔 Думаю над ответом...")
             await answer_with_gpt(update, user_id, text)
@@ -121,7 +120,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
 # 🧠 Ответ через GPT с логированием
 async def answer_with_gpt(update: Update, user_id: int, user_text: str):
     user_name = update.effective_user.full_name
-    messages = user_dialogues[user_id][-6:]  # сохраняем только последние 6 для памяти
+    messages = user_dialogues[user_id][-6:]
 
     dialogue = [{"role": "system", "content": "Ты умная помощница, отвечающая понятно и с заботой."}]
     for m in messages:
@@ -136,14 +135,10 @@ async def answer_with_gpt(update: Update, user_id: int, user_text: str):
         )
         answer = response.choices[0].message.content.strip()
 
-        # Сохраняем в память
         user_dialogues[user_id].append({"q": user_text, "a": answer})
         user_dialogues[user_id] = user_dialogues[user_id][-10:]
 
-        # Озвучка ответа
         await handle_tts_playback(update, answer)
-
-        # Логируем
         log_gpt(user_id, user_name, user_text, answer)
 
     except Exception as e:
