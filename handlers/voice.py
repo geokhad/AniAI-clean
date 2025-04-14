@@ -155,3 +155,11 @@ async def handle_tts_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     await handle_tts_playback(update, text)
     active_tts.discard(user_id)
+
+# 📢 Озвучка через команду /tts
+async def handle_tts_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = " ".join(context.args)
+    if not text:
+        await update.message.reply_text("🔊 Введите текст после команды /tts.")
+        return
+    await handle_tts_playback(update, text)
