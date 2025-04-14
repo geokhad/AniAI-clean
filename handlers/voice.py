@@ -52,7 +52,6 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 file=audio_file,
                 response_format="text"
             )
-
         text = transcript.strip()
         await update.message.reply_text(f"📝 Распознано:\n{text}")
 
@@ -72,11 +71,13 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         # 🔄 Расширенное распознавание команд перевода
         if "перевести на русский" in lower or "переведи на русский" in lower:
             prompt = text.split("на русский", 1)[-1].strip()
+            await update.message.reply_text("🤖 Думаю...")
             await translate_and_reply(update, prompt, "на русский")
             return
 
         if "перевести на английский" in lower or "переведи на английский" in lower:
             prompt = text.split("на английский", 1)[-1].strip()
+            await update.message.reply_text("🤖 Думаю...")
             await translate_and_reply(update, prompt, "на английский")
             return
 
@@ -89,7 +90,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         elif any(word in lower for word in ["картинку", "изображение", "сгенерируй"]):
             clear_user_state(user_id)
             active_imagers.add(user_id)
-            await update.message.reply_text("📸 Включён режим генерации. Опиши изображение.")
+            await update.message.reply_text("🤖 Думаю...\n📸 Включён режим генерации. Опиши изображение.")
             return
 
         elif any(word in lower for word in ["озвучь", "прочитай"]):
@@ -101,7 +102,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         elif any(word in lower for word in ["вопрос", "объясни", "что такое"]):
             clear_user_state(user_id)
             active_ask.add(user_id)
-            await update.message.reply_text("🧠 Включён режим GPT. Задай свой вопрос.")
+            await update.message.reply_text("🤖 Думаю...\n🧠 Включён режим GPT. Задай вопрос.")
             return
 
     except Exception as e:
@@ -114,8 +115,6 @@ async def translate_and_reply(update: Update, text: str, direction: str):
             "Переведи текст с английского на русский." if direction == "на русский"
             else "Переведи текст с русского на английский."
         )
-        await update.message.reply_text("🤖 Думаю над переводом...")
-
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -128,40 +127,3 @@ async def translate_and_reply(update: Update, text: str, direction: str):
         log_translation(update.effective_user.id, update.effective_user.full_name, text, translation)
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка перевода: {e}")
-
-# 📢 /tts
-async def handle_tts_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = " ".join(context.args)
-    if not text:
-        await update.message.reply_text("🔊 Введите текст после команды /tts.")
-        return
-    await handle_tts_playback(update, text)
-
-# 📢 Озвучка через кнопку
-async def handle_tts_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    if user_id not in active_tts:
-        return
-    text = update.message.text.strip()
-    if not text:
-        await update.message.reply_text("⚠️ Пожалуйста, отправьте текст.")
-        return
-    await handle_tts_playback(update, text)
-    active_tts.discard(user_id)
-
-# 🔊 Универсальная озвучка
-async def handle_tts_playback(update: Update, text: str):
-    await update.message.reply_text("🎧 Генерирую голосовое сообщение...")
-    try:
-        response = client.audio.speech.create(
-            model="tts-1-hd",
-            voice="nova",
-            input=text
-        )
-        path = f"/tmp/tts-{update.effective_user.id}.ogg"
-        with open(path, "wb") as f:
-            f.write(response.content)
-        with open(path, "rb") as audio_file:
-            await update.message.reply_voice(voice=audio_file, caption="🗣 Озвучка готова!")
-    except Exception as e:
-        await update.message.reply_text(f"⚠️ Ошибка TTS: {e}")
