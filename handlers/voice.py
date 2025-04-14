@@ -52,6 +52,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 file=audio_file,
                 response_format="text"
             )
+
         text = transcript.strip()
         await update.message.reply_text(f"📝 Распознано:\n{text}")
 
@@ -68,7 +69,6 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
 
         lower = text.lower()
 
-        # 🔄 Расширенное распознавание команд перевода
         if "перевести на русский" in lower or "переведи на русский" in lower:
             prompt = text.split("на русский", 1)[-1].strip()
             await update.message.reply_text("🤖 Думаю...")
@@ -127,3 +127,15 @@ async def translate_and_reply(update: Update, text: str, direction: str):
         log_translation(update.effective_user.id, update.effective_user.full_name, text, translation)
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка перевода: {e}")
+
+# 📢 /tts
+async def handle_tts_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = " ".join(context.args)
+    if not text:
+        await update.message.reply_text("🔊 Введите текст после команды /tts.")
+        return
+    await handle_tts_playback(update, text)
+
+# 📢 Озвучка через кнопку
+async def handle_tts_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update_
