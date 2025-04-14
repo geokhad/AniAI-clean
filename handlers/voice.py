@@ -11,7 +11,11 @@ from handlers.state import (
     active_ask,
     notified_voice_users
 )
-from utils.google_sheets import log_translation  # логирование переводов
+
+try:
+    from utils.google_sheets import log_translation
+except ImportError:
+    log_translation = lambda *args, **kwargs: None
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -118,7 +122,7 @@ async def translate_and_reply(update: Update, text: str, direction: str):
         )
         translation = response.choices[0].message.content.strip()
         await update.message.reply_text(f"🌍 Перевод:\n{translation}")
-        log_translation(update.effective_user.id, text, translation)  # ✅ исправлено
+        log_translation(update.effective_user.id, text, translation)
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка перевода: {e}")
 
