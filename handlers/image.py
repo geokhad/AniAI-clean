@@ -2,18 +2,20 @@ from telegram import Update
 from telegram.ext import ContextTypes
 import os
 from openai import OpenAI
-from handlers.state import active_imagers  # ✅ Исправлено имя
+from handlers.state import active_imagers
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+# ✅ Активация режима генерации изображений
 async def generate_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    active_imagers.add(user_id)  # ✅ Исправлено имя
+    active_imagers.add(user_id)
     await update.message.reply_text("📸 Опиши, что нужно изобразить.")
 
+# ✅ Обработка текстового запроса
 async def handle_image_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    if user_id not in active_imagers:  # ✅ Исправлено имя
+    if user_id not in active_imagers:
         return
 
     prompt = update.message.text.strip()
@@ -23,8 +25,7 @@ async def handle_image_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     await create_image(update, prompt)
 
-    # ❌ Режим остаётся активным, можно генерировать ещё
-
+# ✅ Генерация изображения с обработкой ошибок
 async def create_image(update: Update, prompt: str):
     try:
         response = client.images.generate(
@@ -36,4 +37,7 @@ async def create_image(update: Update, prompt: str):
         image_url = response.data[0].url
         await update.message.reply_photo(photo=image_url, caption="🖼 Вот изображение по твоему запросу!")
     except Exception as e:
-        await update.message.reply_text(f"⚠️ Ошибка при генерации изображения: {e}")
+        if "content_policy_violation" in str(e):
+            await update.message.reply_text("🚫 Извините, этот запрос нарушает политику безопасности и не может быть выполнен.")
+        else:
+            await update.message.reply_text(f"⚠️ Ошибка при генерации изображения: {e}")

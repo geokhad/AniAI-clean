@@ -4,11 +4,12 @@ from telegram.ext import ContextTypes
 from openai import OpenAI
 import fitz  # PyMuPDF
 import docx
-from handlers.state import active_analyzers  # ✅ Поточный режим
-from utils.google_sheets import log_document_analysis  # ✅ Логирование
+from handlers.state import active_analyzers
+from utils.google_sheets import log_document_analysis
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+# 📄 Чтение PDF
 def read_pdf(file_path):
     text = ""
     with fitz.open(file_path) as doc:
@@ -16,17 +17,20 @@ def read_pdf(file_path):
             text += page.get_text()
     return text
 
+# 📄 Чтение DOCX
 def read_docx(file_path):
     doc = docx.Document(file_path)
     return "\n".join([para.text for para in doc.paragraphs])
 
+# 📄 Чтение TXT
 def read_txt(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
         return f.read()
 
+# 🧠 Обработка анализа документа
 async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    active_analyzers.add(user_id)  # ✅ Входим в режим анализа
+    active_analyzers.add(user_id)
 
     if not update.message.document:
         await update.message.reply_text("📎 Пожалуйста, прикрепи документ (PDF, DOCX или TXT).")
@@ -40,11 +44,15 @@ async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Поддерживаются только PDF, DOCX и TXT.")
         return
 
-    new_file = await file.get_file()
-    file_path = f"/tmp/{file.file_unique_id}{file_ext}"
-    await new_file.download_to_drive(file_path)
+    try:
+        tg_file = await file.get_file()
+        file_path = f"/tmp/{file.file_unique_id}{file_ext}"
+        await tg_file.download_to_drive(file_path)
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Не удалось загрузить файл: {e}")
+        return
 
-    await update.message.reply_text("⏳ Анализируем документ...")
+    await update.message.reply_text("⏳ Анализирую документ...")
 
     try:
         if file_ext == ".pdf":
@@ -65,20 +73,19 @@ async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("⚠️ Документ слишком большой. Пожалуйста, сократи его до 3000 символов.")
         return
 
-    prompt = update.message.caption or "Выдели главные идеи и сделай краткое резюме:"
+    prompt = update.message.caption or "Сделай краткое содержание и выдели ключевые идеи:"
 
     try:
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "Ты помощник, анализирующий документы."},
+                {"role": "system", "content": "Ты помощница, анализирующая документы и составляющая краткие выводы."},
                 {"role": "user", "content": f"{prompt}\n{text}"}
             ]
         )
-        result = response.choices[0].message.content
+        result = response.choices[0].message.content.strip()
         await update.message.reply_text(f"📊 Результат анализа:\n{result}")
 
-        # ✅ Логирование
         log_document_analysis(
             user_id=user_id,
             full_name=update.effective_user.full_name,
@@ -87,6 +94,4 @@ async def analyze(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
     except Exception as e:
-        await update.message.reply_text(f"⚠️ Ошибка при анализе документа: {e}")
-
-    # ⚠️ Не выходим из режима — можно продолжать загружать документы
+        await update.message.reply_text(f"⚠️ Ошибка при анализе: {e}")

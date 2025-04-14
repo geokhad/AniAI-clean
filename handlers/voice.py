@@ -123,7 +123,7 @@ async def translate_and_reply(update: Update, text: str, direction: str):
         )
         translation = response.choices[0].message.content.strip()
         await update.message.reply_text(f"🌍 Перевод:\n{translation}")
-        log_translation(update.effective_user.id, text, translation)
+        log_translation(update.effective_user.id, update.effective_user.full_name, text, translation)
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка перевода: {e}")
 
