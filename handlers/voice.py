@@ -1,4 +1,3 @@
-
 import os
 import subprocess
 from telegram import Update
@@ -55,25 +54,17 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             )
 
         text = transcript.strip()
-                text = transcript.strip()
         await update.message.reply_text(f"📝 Распознано:\n{text}")
-
 
         if user_id not in notified_voice_users:
             notified_voice_users.add(user_id)
             await update.message.reply_text(
-                "💡 Ты можешь просто говорить команды:
-"
-                "• «Переведи на русский язык I love you»
-"
-                "• «Сгенерируй картинку»
-"
-                "• «Озвучь текст»
-"
-                "• «Объясни что такое...»
-
-"
-                "Я сам включу нужный режим 🤖"
+                "💡 Ты можешь просто говорить команды:\n"
+                "• «Переведи на русский язык I love you»\n"
+                "• «Сгенерируй картинку»\n"
+                "• «Озвучь текст»\n"
+                "• «Объясни что такое...»\n\n"
+                "Я сама включу нужный режим 🤖"
             )
 
         lower = text.lower()
@@ -95,7 +86,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             await update.message.reply_text("🌍 Включён режим перевода. Введи текст.")
             return
 
-        elif any(word in lower for word in ["картинку", "изображение", "сгенерируй", "нарисуй", "изобрази"]):
+        elif any(word in lower for word in ["картинку", "изображение", "сгенерируй"]):
             clear_user_state(user_id)
             active_imagers.add(user_id)
             await update.message.reply_text("📸 Включён режим генерации. Опиши изображение.")
@@ -107,7 +98,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             await update.message.reply_text("🗣 Включён режим озвучки. Введи текст.")
             return
 
-        elif any(word in lower for word in ["вопрос", "объясни", "что такое", "почему", "зачем", "как сделать"]):
+        elif any(word in lower for word in ["вопрос", "объясни", "что такое"]):
             clear_user_state(user_id)
             active_ask.add(user_id)
             await update.message.reply_text("🧠 Включён режим GPT. Задай свой вопрос.")
@@ -119,11 +110,12 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
 # 🌍 Перевод с направлением
 async def translate_and_reply(update: Update, text: str, direction: str):
     try:
-        await update.message.reply_text("🌍 Перевожу...")
         system = (
             "Переведи текст с английского на русский." if direction == "на русский"
             else "Переведи текст с русского на английский."
         )
+        await update.message.reply_text("🤖 Думаю над переводом...")
+
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -132,8 +124,7 @@ async def translate_and_reply(update: Update, text: str, direction: str):
             ]
         )
         translation = response.choices[0].message.content.strip()
-        await update.message.reply_text(f"🌍 Перевод:
-{translation}")
+        await update.message.reply_text(f"🌍 Перевод:\n{translation}")
         log_translation(update.effective_user.id, update.effective_user.full_name, text, translation)
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка перевода: {e}")
