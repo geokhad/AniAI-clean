@@ -11,7 +11,7 @@ from handlers.state import (
     active_ask,
     notified_voice_users
 )
-from utils.google_sheets import log_translation  # если используется логирование
+from utils.google_sheets import log_translation  # логирование переводов
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -52,7 +52,6 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         text = transcript.strip()
         await update.message.reply_text(f"📝 Распознано:\n{text}")
 
-        # 💡 Подсказка голосовых команд (однократно)
         if user_id not in notified_voice_users:
             notified_voice_users.add(user_id)
             await update.message.reply_text(
@@ -66,7 +65,6 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
 
         lower = text.lower()
 
-        # ✅ Быстрый перевод с распознаванием языка
         if "переведи на русский язык" in lower:
             prompt = text.split("переведи на русский язык", 1)[-1].strip()
             await translate_and_reply(update, prompt, "на русский")
@@ -77,7 +75,6 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             await translate_and_reply(update, prompt, "на английский")
             return
 
-        # ✅ Распознавание голосовых команд
         if "переведи" in lower or "перевести" in lower:
             clear_user_state(user_id)
             active_translators.add(user_id)
@@ -105,7 +102,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка распознавания речи: {e}")
 
-# 🌍 Функция перевода с направлениями
+# 🌍 Перевод с направлением
 async def translate_and_reply(update: Update, text: str, direction: str):
     try:
         system = (
@@ -121,7 +118,7 @@ async def translate_and_reply(update: Update, text: str, direction: str):
         )
         translation = response.choices[0].message.content.strip()
         await update.message.reply_text(f"🌍 Перевод:\n{translation}")
-        log_translation(update.effective_user.id, text, translation)  # если логируем
+        log_translation(update.effective_user.id, text, translation)  # ✅ исправлено
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка перевода: {e}")
 
@@ -145,7 +142,7 @@ async def handle_tts_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await handle_tts_playback(update, text)
     active_tts.discard(user_id)
 
-# 🔊 Озвучка текста
+# 🔊 Универсальная озвучка
 async def handle_tts_playback(update: Update, text: str):
     await update.message.reply_text("🎧 Генерирую голосовое сообщение...")
     try:
