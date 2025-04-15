@@ -56,9 +56,22 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         text = transcript.strip()
         await update.message.reply_text(f"📝 Распознано:
 {text}")
-        await update.message.reply_text("🤔 Думаю над ответом...")
 
         lower = text.lower()
+
+        if any(q in lower for q in ["почему", "зачем", "как", "что", "где", "когда", "можно ли", "возможно ли", "?"]):
+            await update.message.reply_text("🤔 Думаю над ответом...")
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "Ты дружелюбный помощник, который отвечает на вопросы пользователя простым языком."},
+                    {"role": "user", "content": text}
+                ]
+            )
+            answer = response.choices[0].message.content.strip()
+            await handle_tts_playback(update, answer)
+            log_gpt(user.id, user.full_name, text, answer)
+            return
 
         if "перевести на русский" in lower or "переведи на русский" in lower:
             prompt = text.split("на русский", 1)[-1].strip()
@@ -89,14 +102,14 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         if any(word in lower for word in ["картинку", "изображение", "сгенерируй", "изобрази", "создай"]):
             clear_user_state(user_id)
             active_imagers.add(user_id)
-            await update.message.reply_text("🤖 Думаю...
-🖼 Включён режим генерации.")
+            await update.message.reply_text("🤖 Думаю над изображением...
+📸 Включён режим генерации.")
             return
 
-        if any(word in lower for word in ["объясни", "что такое", "почему", "зачем", "как", "кто", "где", "когда", "что", "?"]):
+        if any(word in lower for word in ["объясни", "что такое", "вопрос"]):
             clear_user_state(user_id)
             active_ask.add(user_id)
-            await handle_gpt_text(update, context)
+            await update.message.reply_text("🧠 Включён режим GPT. Задай свой вопрос.")
             return
 
     except Exception as e:
@@ -120,7 +133,7 @@ async def translate_and_reply(update: Update, text: str, direction: str):
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка перевода: {e}")
 
-# 🔊 Озвучка
+# 🔊 Универсальная озвучка
 async def handle_tts_playback(update: Update, text: str):
     await update.message.reply_text("🎧 Генерирую голосовое сообщение...")
     try:
@@ -137,7 +150,7 @@ async def handle_tts_playback(update: Update, text: str):
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка TTS: {e}")
 
-# 📢 Озвучка из текста
+# 📢 Озвучка через кнопку
 async def handle_tts_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id not in active_tts:
@@ -149,7 +162,7 @@ async def handle_tts_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await handle_tts_playback(update, text)
     active_tts.discard(user_id)
 
-# 📢 Озвучка через /tts
+# 📢 Озвучка через команду /tts
 async def handle_tts_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = " ".join(context.args)
     if not text:
