@@ -22,8 +22,7 @@ from handlers.translate import translate
 from handlers.image import generate_image
 from handlers.analyze import analyze
 from handlers.text import handle_text_message
-from handlers.state import clear_user_state
-from handlers.voice import handle_voice_message, handle_tts_request  # ✅ Голосовой режим
+from handlers.voice import handle_voice_message  # ✅ Только голосовой ввод
 
 # Логи
 logging.basicConfig(level=logging.INFO)
@@ -45,15 +44,14 @@ app.add_handler(CommandHandler("menu", menu))
 app.add_handler(CommandHandler("ask", handle_ask))            # GPT
 app.add_handler(CommandHandler("translate", translate))       # Перевод
 app.add_handler(CommandHandler("image", generate_image))      # Генерация изображений
-# app.add_handler(CommandHandler("tts", handle_tts_request))  # ⛔️ Больше не нужен
 
 # Обработчики кнопок и меню
 app.add_handler(CallbackQueryHandler(handle_button))
 
 # Обработчики сообщений
-app.add_handler(MessageHandler(filters.Document.ALL, analyze))                             # Документы
-app.add_handler(MessageHandler(filters.VOICE, handle_voice_message))                      # 🎙 Голосовые сообщения
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))     # Текстовые сообщения
+app.add_handler(MessageHandler(filters.Document.ALL, analyze))                             # 📎 Документы
+app.add_handler(MessageHandler(filters.VOICE, handle_voice_message))                      # 🎙 Голосовые
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))     # ✍️ Текстовые
 
 # Webhook-сервер
 async def handle_telegram(request):
@@ -69,7 +67,7 @@ async def handle_check(request):
 async def main():
     await app.initialize()
 
-    # Команды в Telegram (оставляем только главное меню)
+    # Команды в Telegram
     await app.bot.set_my_commands([
         BotCommand("menu", "📋 Главное меню AniAI")
     ])

@@ -16,6 +16,13 @@ from handlers.voice import handle_tts_text  # ✅ Добавлено
 async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
 
+    # ✅ Проверка: есть ли текст вообще
+    if not update.message or not update.message.text:
+        return
+
+    # 📝 Логируем входящие сообщения
+    print(f"[Text] Сообщение от {user_id}: {update.message.text}")
+
     # 🔁 Приоритет: перевод > изображение > озвучка > GPT
     if user_id in active_translators:
         await handle_translation_text(update, context)
@@ -32,3 +39,9 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     if user_id in active_ask:
         await handle_gpt_text(update, context)
         return
+
+    # 🧩 Если ни один режим не активен
+    await update.message.reply_text(
+        "🤖 Я пока не понимаю, что делать с этим сообщением.\n"
+        "Пожалуйста, выбери режим в меню или задай голосовую команду."
+    )
