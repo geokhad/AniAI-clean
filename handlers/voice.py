@@ -145,3 +145,15 @@ async def handle_tts_playback(update: Update, text: str):
             await update.message.reply_voice(voice=audio_file, caption="🗣 Озвучка готова!")
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка TTS: {e}")
+        # 📢 Озвучка через кнопку
+async def handle_tts_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if user_id not in active_tts:
+        return
+    text = update.message.text.strip()
+    if not text:
+        await update.message.reply_text("⚠️ Пожалуйста, отправьте текст.")
+        return
+    await handle_tts_playback(update, text)
+    active_tts.discard(user_id)
+
