@@ -1,3 +1,5 @@
+# handlers/voice.py
+
 import os
 import subprocess
 from telegram import Update
@@ -11,12 +13,12 @@ from handlers.state import (
     active_ask,
     notified_voice_users
 )
+from handlers.image import create_image
 
 try:
-    from utils.google_sheets import log_translation, log_gpt
+    from utils.google_sheets import log_translation
 except ImportError:
     log_translation = lambda *args, **kwargs: None
-    log_gpt = lambda *args, **kwargs: None
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -55,28 +57,30 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             )
         text = transcript.strip()
         await update.message.reply_text(f"📝 Распознано:\n{text}")
+
+        if user_id not in notified_voice_users:
+            notified_voice_users.add(user_id)
+            await update.message.reply_text(
+                "💡 Ты можешь просто говорить команды:\n"
+                "• «Переведи на русский язык I love you»\n"
+                "• «Сгенерируй картинку»\n"
+                "• «Озвучь текст»\n"
+                "• «Объясни что такое...»\n"
+                "Я сама включу нужный режим 🤖"
+            )
+
         lower = text.lower()
 
-        # 💬 Автоматическая реакция на вопросы
-        if "?" in text or any(word in lower for word in ["зачем", "почему", "как", "что", "когда", "где"]):
-            await update.message.reply_text("🤖 Думаю над ответом...")
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": text}]
-            )
-            answer = response.choices[0].message.content.strip()
-            await update.message.reply_voice(voice=await text_to_voice(answer), caption="🗣️ Ответ готов")
-            log_gpt(user_id, user.full_name, text, answer)
-            return
-
-        if "переведи на русский" in lower:
-            prompt = text.split("переведи на русский", 1)[-1].strip()
+        if "перевести на русский" in lower or "переведи на русский" in lower:
+            prompt = text.split("на русский", 1)[-1].strip()
             await translate_and_reply(update, prompt, "на русский")
             return
-        if "переведи на английский" in lower:
-            prompt = text.split("переведи на английский", 1)[-1].strip()
+
+        if "перевести на английский" in lower or "переведи на английский" in lower:
+            prompt = text.split("на английский", 1)[-1].strip()
             await translate_and_reply(update, prompt, "на английский")
             return
+
         if any(word in lower for word in ["переведи", "перевести"]):
             clear_user_state(user_id)
             active_translators.add(user_id)
@@ -93,13 +97,13 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 await update.message.reply_text("🗣 Включён режим озвучки. Введи текст.")
             return
 
-        if any(word in lower for word in ["картинку", "изображение", "сгенерируй", "создай", "изобрази"]):
+        if any(word in lower for word in ["картинку", "изображение", "сгенерируй", "изобрази", "создай"]):
             clear_user_state(user_id)
-            active_imagers.add(user_id)
-            await update.message.reply_text("🤖 Думаю...\n📸 Включён режим генерации.")
+            await update.message.reply_text("🤖 Думаю над изображением...")
+            await create_image(update, text)
             return
 
-        if any(word in lower for word in ["объясни", "что такое", "расскажи", "вопрос"]):
+        if any(word in lower for word in ["объясни", "что такое", "почему", "зачем", "как", "где", "когда", "?"]):
             clear_user_state(user_id)
             active_ask.add(user_id)
             await update.message.reply_text("🧠 Включён режим GPT. Задай свой вопрос.")
@@ -125,44 +129,19 @@ async def translate_and_reply(update: Update, text: str, direction: str):
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка перевода: {e}")
 
-# 🔊 Генерация речи
-async def text_to_voice(text: str) -> bytes:
-    response = client.audio.speech.create(
-        model="tts-1-hd",
-        voice="nova",
-        input=text
-    )
-    return response.content
-
 # 🔊 Универсальная озвучка
 async def handle_tts_playback(update: Update, text: str):
     await update.message.reply_text("🎧 Генерирую голосовое сообщение...")
     try:
-        audio_bytes = await text_to_voice(text)
+        response = client.audio.speech.create(
+            model="tts-1-hd",
+            voice="nova",
+            input=text
+        )
         path = f"/tmp/tts-{update.effective_user.id}.ogg"
         with open(path, "wb") as f:
-            f.write(audio_bytes)
+            f.write(response.content)
         with open(path, "rb") as audio_file:
             await update.message.reply_voice(voice=audio_file, caption="🗣 Озвучка готова!")
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка TTS: {e}")
-
-# 📢 Озвучка через кнопку
-async def handle_tts_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    if user_id not in active_tts:
-        return
-    text = update.message.text.strip()
-    if not text:
-        await update.message.reply_text("⚠️ Пожалуйста, отправьте текст.")
-        return
-    await handle_tts_playback(update, text)
-    active_tts.discard(user_id)
-
-# 📢 Озвучка через /tts
-async def handle_tts_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = " ".join(context.args)
-    if not text:
-        await update.message.reply_text("🔊 Введите текст после команды /tts.")
-        return
-    await handle_tts_playback(update, text)
