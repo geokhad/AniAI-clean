@@ -26,9 +26,19 @@ def log_subscriber(user_id, full_name, username):
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
     append_to_sheet("Subscribers", [str(user_id), full_name, username or "", now])
 
-def log_gpt(user_id, full_name, question, answer, lang="auto"):
+def log_gpt(user_id, full_name, question, answer, lang="auto", session_id=None, history=None):
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
-    append_to_sheet("GPT", [str(user_id), full_name, question, answer, lang, now])
+    row = [
+        str(user_id),
+        full_name,
+        question,
+        answer,
+        lang,
+        now,
+        session_id or "",
+        json.dumps(history, ensure_ascii=False) if history else ""
+    ]
+    append_to_sheet("GPT", row)
 
 def log_translation(user_id, full_name, source_text, translation):
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
