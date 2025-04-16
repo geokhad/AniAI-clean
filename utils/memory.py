@@ -1,3 +1,4 @@
+
 import time
 
 # ⏱️ Словарь для хранения истории сообщений: {user_id: [(question, answer), ...]}
