@@ -102,3 +102,23 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
 
 # Остальные функции (translate_and_reply, gpt_answer, handle_tts_playback и др.)
 # остаются без изменений. Если нужно — пришлю их тоже.
+# 📢 Озвучка через кнопку
+async def handle_tts_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if user_id not in active_tts:
+        return
+    text = update.message.text.strip()
+    if not text:
+        await update.message.reply_text("⚠️ Пожалуйста, отправьте текст.")
+        return
+    await handle_tts_playback(update, text)
+    active_tts.discard(user_id)
+
+# 📢 Озвучка через команду /tts
+async def handle_tts_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = " ".join(context.args)
+    if not text:
+        await update.message.reply_text("🔊 Введите текст после команды /tts.")
+        return
+    await handle_tts_playback(update, text)
+
