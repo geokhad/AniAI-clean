@@ -41,7 +41,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
         )
     except Exception as e:
-        await update.message.reply_text("❌ Ошибка ffmpeg: " + str(e))
+        await update.message.reply_text(f"❌ Ошибка ffmpeg: {e}")
         return
 
     try:
@@ -51,8 +51,13 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 file=audio_file,
                 response_format="text"
             )
-        text = transcript.strip()
-        await update.message.reply_text("📝 Распознано:\n" + text)
+
+        if not transcript:
+            await update.message.reply_text("⚠️ Не удалось распознать речь.")
+            return
+
+        text = transcript.strip() if isinstance(transcript, str) else str(transcript).strip()
+        await update.message.reply_text(f"📝 Распознано:\n{text}")
 
         lower = text.lower()
 
@@ -107,7 +112,8 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             return
 
     except Exception as e:
-        await update.message.reply_text("⚠️ Ошибка распознавания речи: " + str(e))
+        await update.message.reply_text(f"⚠️ Ошибка распознавания речи: {e}")
+
 
 # 🌍 Перевод
 async def translate_and_reply(update: Update, text: str, direction: str):
@@ -121,10 +127,11 @@ async def translate_and_reply(update: Update, text: str, direction: str):
             ]
         )
         translation = response.choices[0].message.content.strip()
-        await update.message.reply_text("🌍 Перевод:\n" + translation)
+        await update.message.reply_text(f"🌍 Перевод:\n{translation}")
         log_translation(update.effective_user.id, update.effective_user.full_name, text, translation)
     except Exception as e:
-        await update.message.reply_text("⚠️ Ошибка перевода: " + str(e))
+        await update.message.reply_text(f"⚠️ Ошибка перевода: {e}")
+
 
 # 🤖 Ответ с GPT
 async def gpt_answer(update: Update, prompt: str):
@@ -148,7 +155,8 @@ async def gpt_answer(update: Update, prompt: str):
         await handle_tts_playback(update, answer)
         update_memory(user_id, prompt, answer)
     except Exception as e:
-        await update.message.reply_text("⚠️ Ошибка ответа: " + str(e))
+        await update.message.reply_text(f"⚠️ Ошибка ответа: {e}")
+
 
 # 🔊 Универсальная озвучка
 async def handle_tts_playback(update: Update, text: str):
@@ -165,7 +173,8 @@ async def handle_tts_playback(update: Update, text: str):
         with open(path, "rb") as audio_file:
             await update.message.reply_voice(voice=audio_file)
     except Exception as e:
-        await update.message.reply_text("⚠️ Ошибка TTS: " + str(e))
+        await update.message.reply_text(f"⚠️ Ошибка TTS: {e}")
+
 
 # 📢 Озвучка через кнопку
 async def handle_tts_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -178,6 +187,7 @@ async def handle_tts_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     await handle_tts_playback(update, text)
     active_tts.discard(user_id)
+
 
 # 📢 Озвучка через команду /tts
 async def handle_tts_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
