@@ -52,18 +52,25 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 response_format="text"
             )
         text = transcript.strip()
-        await update.message.reply_text(f"📝 Распознано:\n{text}")
+        await update.message.reply_text(f"📝 Распознано:
+{text}")
 
         lower = text.lower()
 
         if user_id not in notified_voice_users:
             notified_voice_users.add(user_id)
             await update.message.reply_text(
-                "💡 Ты можешь говорить фразы:\n"
-                "• «переведи на русский I love you»\n"
-                "• «создай картинку»\n"
-                "• «объясни, что такое…»\n"
-                "• «озвучь»\n\n"
+                "💡 Ты можешь говорить фразы:
+"
+                "• «переведи на русский I love you»
+"
+                "• «создай картинку»
+"
+                "• «объясни, что такое…»
+"
+                "• «озвучь»
+
+"
                 "Я сам пойму, что ты хочешь 🤖"
             )
 
@@ -121,68 +128,8 @@ async def translate_and_reply(update: Update, text: str, direction: str):
             ]
         )
         translation = response.choices[0].message.content.strip()
-        await update.message.reply_text(f"🌍 Перевод:\n{translation}")
+        await update.message.reply_text(f"🌍 Перевод:
+{translation}")
         log_translation(update.effective_user.id, update.effective_user.full_name, text, translation)
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка перевода: {e}")
-
-# 🤖 Ответ с GPT
-async def gpt_answer(update: Update, prompt: str):
-    user_id = update.effective_user.id
-    history = get_memory(user_id)
-
-    messages = [{"role": "system", "content": "Ты полезный помощник в Telegram."}]
-    for q, a in history:
-        messages.append({"role": "user", "content": q})
-        messages.append({"role": "assistant", "content": a})
-    messages.append({"role": "user", "content": prompt})
-
-    await update.message.reply_text("🤔 Думаю над ответом...")
-
-    try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=messages
-        )
-        answer = response.choices[0].message.content.strip()
-        await handle_tts_playback(update, answer)
-        update_memory(user_id, prompt, answer)
-    except Exception as e:
-        await update.message.reply_text(f"⚠️ Ошибка ответа: {e}")
-
-# 🔊 Универсальная озвучка
-async def handle_tts_playback(update: Update, text: str):
-    await update.message.reply_text("🎧 Генерирую голосовое сообщение...")
-    try:
-        response = client.audio.speech.create(
-            model="tts-1-hd",
-            voice="nova",
-            input=text
-        )
-        path = f"/tmp/tts-{update.effective_user.id}.ogg"
-        with open(path, "wb") as f:
-            f.write(response.content)
-        with open(path, "rb") as audio_file:
-            await update.message.reply_voice(voice=audio_file)
-    except Exception as e:
-        await update.message.reply_text(f"⚠️ Ошибка TTS: {e}")
-
-# 📢 Озвучка через кнопку
-async def handle_tts_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    if user_id not in active_tts:
-        return
-    text = update.message.text.strip()
-    if not text:
-        await update.message.reply_text("⚠️ Пожалуйста, отправьте текст.")
-        return
-    await handle_tts_playback(update, text)
-    active_tts.discard(user_id)
-
-# 📢 Озвучка через команду /tts
-async def handle_tts_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = " ".join(context.args)
-    if not text:
-        await update.message.reply_text("🔊 Введите текст после команды /tts.")
-        return
-    await handle_tts_playback(update, text)
