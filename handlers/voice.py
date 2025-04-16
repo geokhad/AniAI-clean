@@ -1,4 +1,3 @@
-
 import os
 import subprocess
 import time
@@ -15,6 +14,7 @@ from handlers.state import (
 )
 from utils.memory import get_memory, update_memory
 from utils.google_sheets import log_translation
+from handlers.image import handle_image_prompt
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -52,25 +52,18 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 response_format="text"
             )
         text = transcript.strip()
-        await update.message.reply_text(f"📝 Распознано:
-{text}")
+        await update.message.reply_text(f"📝 Распознано:\n{text}")
 
         lower = text.lower()
 
         if user_id not in notified_voice_users:
             notified_voice_users.add(user_id)
             await update.message.reply_text(
-                "💡 Ты можешь говорить фразы:
-"
-                "• «переведи на русский I love you»
-"
-                "• «создай картинку»
-"
-                "• «объясни, что такое…»
-"
-                "• «озвучь»
-
-"
+                "💡 Ты можешь говорить фразы:\n"
+                "• «переведи на русский I love you»\n"
+                "• «создай картинку»\n"
+                "• «объясни, что такое…»\n"
+                "• «озвучь»\n\n"
                 "Я сам пойму, что ты хочешь 🤖"
             )
 
@@ -103,8 +96,8 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         if any(word in lower for word in ["картинку", "изображение", "сгенерируй", "создай", "нарисуй"]):
             clear_user_state(user_id)
             active_imagers.add(user_id)
-            await update.message.reply_text("🤖 Думаю...
-📸 Включён режим генерации.")
+            await update.message.reply_text("🤖 Думаю над изображением...")
+            await handle_image_prompt(update, context)
             return
 
         if "?" in text or any(word in lower for word in ["объясни", "что такое", "зачем", "как", "почему"]):
@@ -128,8 +121,7 @@ async def translate_and_reply(update: Update, text: str, direction: str):
             ]
         )
         translation = response.choices[0].message.content.strip()
-        await update.message.reply_text(f"🌍 Перевод:
-{translation}")
+        await update.message.reply_text(f"🌍 Перевод:\n{translation}")
         log_translation(update.effective_user.id, update.effective_user.full_name, text, translation)
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка перевода: {e}")
@@ -145,7 +137,7 @@ async def gpt_answer(update: Update, prompt: str):
         messages.append({"role": "assistant", "content": a})
     messages.append({"role": "user", "content": prompt})
 
-    await update.message.reply_text("🤖 Думаю над ответом...")
+    await update.message.reply_text("🤔 Думаю над ответом...")
 
     try:
         response = client.chat.completions.create(
