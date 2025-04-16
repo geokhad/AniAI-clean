@@ -52,8 +52,8 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 response_format="text"
             )
         text = transcript.strip()
-        await update.message.reply_text(f"📝 Распознано:
-{text}")
+     await update.message.reply_text("📝 Распознано:\n" + text)
+
 
         lower = text.lower()
 
