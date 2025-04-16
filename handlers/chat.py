@@ -35,18 +35,31 @@ async def send_gpt_response(update: Update, prompt: str):
     full_name = update.effective_user.full_name
 
     try:
+        # Загружаем сеансовую память
         memory = get_memory(user_id)
-        messages = memory + [{"role": "user", "content": prompt}]
+
+        # Начинаем с системного промта
+        messages = [{"role": "system", "content": "Ты — полезный Telegram-ассистент. Отвечай понятно, кратко и дружелюбно."}]
+
+        # Добавляем историю из памяти
+        for q, a in memory:
+            messages.append({"role": "user", "content": q})
+            messages.append({"role": "assistant", "content": a})
+
+        # Добавляем текущий вопрос
+        messages.append({"role": "user", "content": prompt})
 
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=messages
         )
-        answer = response.choices[0].message.content
+        answer = response.choices[0].message.content.strip()
         await update.message.reply_text(answer)
 
+        # Обновляем память
         update_memory(user_id, prompt, answer)
 
+        # Логируем в Google Sheets
         log_gpt(
             user_id=user_id,
             full_name=full_name,
