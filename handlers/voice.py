@@ -94,7 +94,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 await update.message.reply_text("🗣 Включён режим озвучки. Введи текст.")
             return
 
-        if any(word in lower for word in ["картинку", "изображение", "сгенерируй", "создай", "нарисуй"]):
+        if any(word in lower for word in ["картинку", "изображение", "сгенерируй", "создай", "нарисуй", "изобрази"]):
             clear_user_state(user_id)
             await update.message.reply_text("🤖 Думаю над изображением...")
             await handle_image_prompt(update, context, prompt=text)
@@ -166,23 +166,3 @@ async def handle_tts_playback(update: Update, text: str):
             await update.message.reply_voice(voice=audio_file)
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка TTS: {e}")
-
-# 📢 Озвучка через кнопку
-async def handle_tts_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    if user_id not in active_tts:
-        return
-    text = update.message.text.strip()
-    if not text:
-        await update.message.reply_text("⚠️ Пожалуйста, отправьте текст.")
-        return
-    await handle_tts_playback(update, text)
-    active_tts.discard(user_id)
-
-# 📢 Озвучка через команду /tts
-async def handle_tts_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = " ".join(context.args)
-    if not text:
-        await update.message.reply_text("🔊 Введите текст после команды /tts.")
-        return
-    await handle_tts_playback(update, text)
