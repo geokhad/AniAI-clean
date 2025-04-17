@@ -1,3 +1,4 @@
+
 import os
 import subprocess
 import time
@@ -52,18 +53,25 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 response_format="text"
             )
         text = transcript.strip() if transcript else ""
-        await update.message.reply_text(f"📝 Распознано:\n{text}")
+        await update.message.reply_text(f"📝 Распознано:
+{text}")
 
         lower = text.lower()
 
         if user_id not in notified_voice_users:
             notified_voice_users.add(user_id)
             await update.message.reply_text(
-                "💡 Ты можешь говорить фразы:\n"
-                "• «переведи на русский I love you»\n"
-                "• «создай картинку»\n"
-                "• «объясни, что такое…»\n"
-                "• «озвучь»\n\n"
+                "💡 Ты можешь говорить фразы:
+"
+                "• «переведи на русский I love you»
+"
+                "• «создай картинку»
+"
+                "• «объясни, что такое…»
+"
+                "• «озвучь»
+
+"
                 "Я сам пойму, что ты хочешь 🤖"
             )
 
@@ -121,7 +129,8 @@ async def translate_and_reply(update: Update, text: str, direction: str):
             ]
         )
         translation = response.choices[0].message.content.strip()
-        await update.message.reply_text(f"🌍 Перевод:\n{translation}")
+        await update.message.reply_text(f"🌍 Перевод:
+{translation}")
         log_translation(update.effective_user.id, update.effective_user.full_name, text, translation)
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка перевода: {e}")
