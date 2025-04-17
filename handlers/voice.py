@@ -1,6 +1,5 @@
 import os
 import subprocess
-import time
 from telegram import Update
 from telegram.ext import ContextTypes
 from openai import OpenAI
@@ -52,7 +51,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 response_format="text"
             )
         text = transcript.strip() if transcript else ""
-        await update.message.reply_text(f"📝 Распознано:\n{text}")
+        await update.message.reply_text(f"📝 Распознано: {text}")
 
         lower = text.lower()
 
@@ -93,7 +92,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 await update.message.reply_text("🗣 Включён режим озвучки. Введи текст.")
             return
 
-        if any(word in lower for word in ["картинку", "изображение", "сгенерируй", "создай", "нарисуй"]):
+        if any(word in lower for word in ["картинку", "изображение", "сгенерируй", "создай", "нарисуй", "изобрази"]):
             clear_user_state(user_id)
             active_imagers.add(user_id)
             await update.message.reply_text("🤖 Думаю над изображением...")
