@@ -96,9 +96,8 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
 
         if any(word in lower for word in ["картинку", "изображение", "сгенерируй", "создай", "нарисуй"]):
             clear_user_state(user_id)
-            active_imagers.add(user_id)
             await update.message.reply_text("🤖 Думаю над изображением...")
-            await handle_image_prompt(update, context)
+            await handle_image_prompt(update, context, prompt=text)
             return
 
         if "?" in text or any(word in lower for word in ["объясни", "что такое", "зачем", "как", "почему"]):
