@@ -1,3 +1,4 @@
+
 from telegram import Update
 from telegram.ext import ContextTypes
 import os
@@ -6,15 +7,23 @@ from handlers.state import active_imagers
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# ✅ Активация режима генерации изображений
+# ✅ Активация режима генерации изображений вручную
 async def generate_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     active_imagers.add(user_id)
     await update.message.reply_text("📸 Включён режим генерации. Опиши, что нужно сгенерировать.")
 
-# ✅ Обработка текстового запроса
-async def handle_image_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# ✅ Обработка текстового или переданного запроса
+async def handle_image_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE, prompt: str = None):
     user_id = update.effective_user.id
+
+    # если prompt пришёл (например, из voice.py) — генерируем сразу
+    if prompt:
+        await update.message.reply_text("🤖 Думаю над изображением…")
+        await create_image(update, prompt)
+        return
+
+    # если пользователь активировал режим, ждём текст
     if user_id not in active_imagers:
         return
 
