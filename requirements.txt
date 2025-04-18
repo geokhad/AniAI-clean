@@ -1,4 +1,4 @@
-python-telegram-bot[webhooks]==20.7
+python-telegram-bot[webhooks]==20.8
 openai
 gspread
 oauth2client
@@ -6,6 +6,8 @@ nest_asyncio
 python-dotenv
 aiohttp
 python-docx
-PyMuPDF
+pymupdf
 pydub
+requests
+
 

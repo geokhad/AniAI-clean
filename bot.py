@@ -1,8 +1,11 @@
 
 import os
+from dotenv import load_dotenv
+
+load_dotenv(dotenv_path=".env")  # <-- уточни путь явно
 import logging
 import asyncio
-from dotenv import load_dotenv
+
 from aiohttp import web
 from telegram import Update, BotCommand
 from telegram.ext import (
