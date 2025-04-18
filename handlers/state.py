@@ -4,6 +4,7 @@
 active_translators = set()
 active_imagers = set()
 active_analyzers = set()
+active_music = set()
 active_ask = set()
 active_tts = set()  # ✅ Режим озвучки
 

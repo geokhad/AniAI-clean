@@ -1,4 +1,3 @@
-
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from handlers.state import (
@@ -6,10 +5,10 @@ from handlers.state import (
     active_translators,
     active_imagers,
     active_analyzers,
+    active_tts,
+    active_music,
     clear_user_state,
-    active_tts
 )
-from handlers.music import handle_music_prompt  # ✅ Добавлено
 
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
@@ -36,7 +35,7 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     user_id = query.from_user.id
 
-    if query.data in ["go_menu", "voice_mode", "tts_mode", "change_language", "premium_mode", "feedback"]:
+    if query.data in ["go_menu", "voice_mode", "tts_mode", "change_language", "premium_mode", "feedback", "music_help"]:
         clear_user_state(user_id)
 
     if query.data == "go_menu":
@@ -75,7 +74,11 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if query.data == "music_help":
-        await handle_music_prompt(update, context)
+        active_music.add(user_id)
+        await context.bot.send_message(
+            chat_id=query.message.chat.id,
+            text="🎼 Напиши, какую музыку ты хочешь. Например: «тихая танцевальная»"
+        )
         return
 
     if query.data == "analyze_help":
@@ -116,7 +119,8 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 • Продиктовать текст — я предложу перевод, если язык другой
 • Задать вопрос — и я включу режим ответа
 
-💡 Говори со мной свободно — я подстроюсь под тебя 🪄""", parse_mode="HTML"
+💡 Говори со мной свободно — я подстроюсь под тебя 🪄""",
+            parse_mode="HTML"
         )
         return
 

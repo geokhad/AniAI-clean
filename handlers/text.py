@@ -5,13 +5,15 @@ from handlers.state import (
     active_translators,
     active_imagers,
     active_ask,
-    active_tts  # ✅ Добавлено
+    active_tts,
+    active_music  # ✅ Добавлено
 )
 
 from handlers.translate import handle_translation_text
 from handlers.image import handle_image_prompt
 from handlers.chat import handle_gpt_text
-from handlers.voice import handle_tts_text  # ✅ Добавлено
+from handlers.voice import handle_tts_text
+from handlers.music import handle_music_prompt  # ✅ Добавлено
 
 async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -23,7 +25,7 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     # 📝 Логируем входящие сообщения
     print(f"[Text] Сообщение от {user_id}: {update.message.text}")
 
-    # 🔁 Приоритет: перевод > изображение > озвучка > GPT
+    # 🔁 Приоритет: перевод > изображение > озвучка > музыка > GPT
     if user_id in active_translators:
         await handle_translation_text(update, context)
         return
@@ -34,6 +36,11 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     if user_id in active_tts:
         await handle_tts_text(update, context)
+        return
+
+    if user_id in active_music:
+        await handle_music_prompt(update, context)
+        active_music.discard(user_id)
         return
 
     if user_id in active_ask:
