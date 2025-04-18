@@ -75,9 +75,10 @@ async def main():
 
     # Команды в Telegram
     await app.bot.set_my_commands([
-        BotCommand("menu", "📋 Главное меню AniAI"),
-        BotCommand("music", "🎼 Сгенерировать музыку")  # (по желанию)
-    ])
+    BotCommand("menu", "📋 Главное меню AniAI"),
+    # BotCommand("music", "🎼 Сгенерировать музыку")  # ❌ Удалить или закомментировать
+])
+
 
     await app.bot.set_webhook(url=WEBHOOK_URL)
     await app.start()
