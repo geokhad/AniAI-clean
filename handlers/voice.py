@@ -16,6 +16,7 @@ from handlers.state import (
 from utils.memory import get_memory, update_memory
 from utils.google_sheets import log_translation
 from handlers.image import handle_image_prompt
+from handlers.music import handle_music_prompt  # ✅ Добавлен импорт
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -63,6 +64,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 "💡 Ты можешь говорить фразы:\n"
                 "• «переведи на русский I love you»\n"
                 "• «создай картинку»\n"
+                "• «сыграй музыку»\n"
                 "• «объясни, что такое…»\n"
                 "• «озвучь»\n\n"
                 "Я сам пойму, что ты хочешь 🤖"
@@ -98,6 +100,11 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             clear_user_state(user_id)
             await update.message.reply_text("🤖 Думаю над изображением...")
             await handle_image_prompt(update, context, prompt=text)
+            return
+
+        if any(word in lower for word in ["сыграй", "музыку", "мелодию", "хочу музыку"]):
+            await update.message.reply_text("🎧 Думаю над музыкой...")
+            await handle_music_prompt(update, context)
             return
 
         if "?" in text or any(word in lower for word in ["объясни", "что такое", "зачем", "как", "почему"]):
@@ -166,7 +173,6 @@ async def handle_tts_playback(update: Update, text: str):
             await update.message.reply_voice(voice=audio_file)
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка TTS: {e}")
-
 
 # 📢 Озвучка через кнопку
 async def handle_tts_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
