@@ -122,5 +122,3 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
 
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка распознавания речи: {e}")
-
-# остальные функции опущены для краткости...
