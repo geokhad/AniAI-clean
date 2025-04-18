@@ -1,6 +1,5 @@
 import os
 import subprocess
-import time
 from telegram import Update
 from telegram.ext import ContextTypes
 from openai import OpenAI
@@ -15,7 +14,7 @@ from handlers.state import (
 from utils.memory import get_memory, update_memory
 from utils.google_sheets import log_translation
 from handlers.image import handle_image_prompt
-from handlers.music import handle_music_prompt  # ✅ Добавлен импорт
+from handlers.music import handle_music_prompt
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -41,11 +40,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             ["ffmpeg", "-y", "-i", ogg_path, "-ar", "16000", "-ac", "1", wav_path],
             check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
         )
-    except Exception as e:
-        await update.message.reply_text(f"❌ Ошибка ffmpeg: {e}")
-        return
 
-    try:
         with open(wav_path, "rb") as audio_file:
             transcript = client.audio.transcriptions.create(
                 model="whisper-1",
@@ -53,27 +48,19 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 response_format="text"
             )
         text = transcript.strip() if transcript else ""
-        await update.message.reply_text(f"📝 Распознано:
-{text}")
+        await update.message.reply_text(f"📝 Распознано:\n{text}")
 
         lower = text.lower()
 
         if user_id not in notified_voice_users:
             notified_voice_users.add(user_id)
             await update.message.reply_text(
-                "💡 Ты можешь говорить фразы:
-"
-                "• «переведи на русский I love you»
-"
-                "• «создай картинку»
-"
-                "• «сыграй музыку»
-"
-                "• «объясни, что такое…»
-"
-                "• «озвучь»
-
-"
+                "💡 Ты можешь говорить фразы:\n"
+                "• «переведи на русский I love you»\n"
+                "• «создай картинку»\n"
+                "• «сыграй музыку»\n"
+                "• «объясни, что такое…»\n"
+                "• «озвучь»\n\n"
                 "Я сам пойму, что ты хочешь 🤖"
             )
 
@@ -122,3 +109,61 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
 
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка распознавания речи: {e}")
+
+# 🌍 Перевод
+async def translate_and_reply(update: Update, text: str, direction: str):
+    try:
+        system = "Переведи текст с английского на русский." if direction == "на русский" else "Переведи текст с русского на английский."
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": text}
+            ]
+        )
+        translation = response.choices[0].message.content.strip()
+        await update.message.reply_text(f"🌍 Перевод:\n{translation}")
+        log_translation(update.effective_user.id, update.effective_user.full_name, text, translation)
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Ошибка перевода: {e}")
+
+# 🤖 Ответ с GPT
+async def gpt_answer(update: Update, prompt: str):
+    user_id = update.effective_user.id
+    history = get_memory(user_id)
+
+    messages = [{"role": "system", "content": "Ты полезный помощник в Telegram."}]
+    for q, a in history:
+        messages.append({"role": "user", "content": q})
+        messages.append({"role": "assistant", "content": a})
+    messages.append({"role": "user", "content": prompt})
+
+    await update.message.reply_text("🤔 Думаю над ответом...")
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=messages
+        )
+        answer = response.choices[0].message.content.strip()
+        await handle_tts_playback(update, answer)
+        update_memory(user_id, prompt, answer)
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Ошибка ответа: {e}")
+
+# 🔊 Универсальная озвучка
+async def handle_tts_playback(update: Update, text: str):
+    await update.message.reply_text("🎧 Генерирую голосовое сообщение...")
+    try:
+        response = client.audio.speech.create(
+            model="tts-1-hd",
+            voice="nova",
+            input=text
+        )
+        path = f"/tmp/tts-{update.effective_user.id}.ogg"
+        with open(path, "wb") as f:
+            f.write(response.content)
+        with open(path, "rb") as audio_file:
+            await update.message.reply_voice(voice=audio_file)
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Ошибка TTS: {e}")
