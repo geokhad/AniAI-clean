@@ -1,4 +1,3 @@
-
 from telegram import Update
 from telegram.ext import ContextTypes
 import os
@@ -6,6 +5,17 @@ from openai import OpenAI
 from handlers.state import active_imagers
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# 🔒 Фильтр запрещённых слов
+BANNED_WORDS = [
+    "порно", "секс", "убийство", "насилие", "террор", "украин", "хохол", "русня",
+    "москаль", "бандера", "взрыв", "бомба", "атака", "нах", "еба", "пизд", "сука", "хуй",
+    "бляд", "жопа", "fuck", "shit", "asshole", "terror", "kill", "rape"
+]
+
+def contains_banned_words(text: str) -> bool:
+    lower = text.lower()
+    return any(bad in lower for bad in BANNED_WORDS)
 
 # ✅ Активация режима генерации изображений вручную
 async def generate_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -19,6 +29,9 @@ async def handle_image_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     # если prompt пришёл (например, из voice.py) — генерируем сразу
     if prompt:
+        if contains_banned_words(prompt):
+            await update.message.reply_text("🚫 Запрос содержит запрещённые слова и не может быть обработан.")
+            return
         await update.message.reply_text("🤖 Думаю над изображением…")
         await create_image(update, prompt)
         return
@@ -30,6 +43,10 @@ async def handle_image_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE
     prompt = update.message.text.strip()
     if not prompt:
         await update.message.reply_text("❗ Пожалуйста, укажи, что нужно сгенерировать.")
+        return
+
+    if contains_banned_words(prompt):
+        await update.message.reply_text("🚫 Запрос содержит запрещённые слова и не может быть обработан.")
         return
 
     await update.message.reply_text("🤖 Думаю над изображением…")

@@ -15,15 +15,29 @@ from handlers.chat import handle_gpt_text
 from handlers.voice import handle_tts_text
 from handlers.music import handle_music_prompt  # ✅ Добавлено
 
+# 🚫 Нецензурная лексика и запрещённые темы
+BANNED_WORDS = [
+    "хуй", "пизда", "блядь", "ебать", "нахуй", "сука", "уёбок", "мудила",
+    "террор", "террорист", "теракт", "убийство", "насилие", "изнасилование",
+    "война", "украин", "русск", "путин", "зеленск", "москал", "оккупант"
+]
+
+def contains_banned_words(text):
+    lower = text.lower()
+    return any(word in lower for word in BANNED_WORDS)
+
 async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
 
-    # ✅ Проверка: есть ли текст вообще
     if not update.message or not update.message.text:
         return
 
-    # 📝 Логируем входящие сообщения
-    print(f"[Text] Сообщение от {user_id}: {update.message.text}")
+    text = update.message.text
+    print(f"[Text] Сообщение от {user_id}: {text}")
+
+    if contains_banned_words(text):
+        await update.message.reply_text("🚫 Извините, это сообщение нарушает правила использования.")
+        return
 
     # 🔁 Приоритет: перевод > изображение > озвучка > музыка > GPT
     if user_id in active_translators:
@@ -47,7 +61,6 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         await handle_gpt_text(update, context)
         return
 
-    # 🧩 Если ни один режим не активен
     await update.message.reply_text(
         "🤖 Я пока не понимаю, что делать с этим сообщением.\n"
         "Пожалуйста, выбери режим в меню или задай голосовую команду."

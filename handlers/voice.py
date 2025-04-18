@@ -15,6 +15,7 @@ from utils.memory import get_memory, update_memory
 from utils.google_sheets import log_translation
 from handlers.image import handle_image_prompt
 from handlers.music import handle_music_prompt
+from utils.safety import contains_prohibited_content
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -48,6 +49,11 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 response_format="text"
             )
         text = transcript.strip() if transcript else ""
+
+        if contains_prohibited_content(text):
+            await update.message.reply_text("🚫 Обнаружен недопустимый или опасный запрос. Попробуй переформулировать.")
+            return
+
         await update.message.reply_text(f"📝 Распознано:\n{text}")
 
         lower = text.lower()
@@ -176,6 +182,9 @@ async def handle_tts_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.strip()
     if not text:
         await update.message.reply_text("⚠️ Пожалуйста, отправьте текст.")
+        return
+    if contains_prohibited_content(text):
+        await update.message.reply_text("🚫 Обнаружен недопустимый или опасный запрос. Попробуй переформулировать.")
         return
     await handle_tts_playback(update, text)
     active_tts.discard(user_id)
