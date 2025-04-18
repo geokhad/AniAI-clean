@@ -1,3 +1,4 @@
+
 import os
 import logging
 import asyncio
@@ -23,6 +24,7 @@ from handlers.image import generate_image
 from handlers.analyze import analyze
 from handlers.text import handle_text_message
 from handlers.voice import handle_voice_message  # ✅ Только голосовой ввод
+from handlers.music import handle_music_prompt   # 🎼 Добавлен для генерации музыки
 
 # Логи
 logging.basicConfig(level=logging.INFO)
@@ -44,6 +46,7 @@ app.add_handler(CommandHandler("menu", menu))
 app.add_handler(CommandHandler("ask", handle_ask))            # GPT
 app.add_handler(CommandHandler("translate", translate))       # Перевод
 app.add_handler(CommandHandler("image", generate_image))      # Генерация изображений
+app.add_handler(CommandHandler("music", handle_music_prompt)) # 🎼 Музыка по команде
 
 # Обработчики кнопок и меню
 app.add_handler(CallbackQueryHandler(handle_button))
@@ -69,7 +72,8 @@ async def main():
 
     # Команды в Telegram
     await app.bot.set_my_commands([
-        BotCommand("menu", "📋 Главное меню AniAI")
+        BotCommand("menu", "📋 Главное меню AniAI"),
+        BotCommand("music", "🎼 Сгенерировать музыку")  # (по желанию)
     ])
 
     await app.bot.set_webhook(url=WEBHOOK_URL)
