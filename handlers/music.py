@@ -13,11 +13,12 @@ headers = {
 
 # 🎼 Генерация музыки по описанию
 async def handle_music_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🎧 Генерирую музыку по твоему описанию...")
+    message = update.message or update.callback_query.message
+    await message.reply_text("🎧 Генерирую музыку по твоему описанию...")
 
-    prompt = update.message.text.strip()
+    prompt = message.text.strip() if message.text else ""
     if not prompt:
-        await update.message.reply_text("❗ Пожалуйста, напиши, какую музыку ты хочешь.")
+        await message.reply_text("❗ Пожалуйста, напиши, какую музыку ты хочешь.")
         return
 
     try:
@@ -27,7 +28,7 @@ async def handle_music_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE
         response = requests.post(API_URL, headers=headers, json=payload, stream=True)
 
         if response.status_code != 200:
-            await update.message.reply_text(f"⚠️ Ошибка генерации музыки: {response.status_code} — {response.text}")
+            await message.reply_text(f"⚠️ Ошибка генерации музыки: {response.status_code} — {response.text}")
             return
 
         audio_path = f"/tmp/music-{update.effective_user.id}.wav"
@@ -37,8 +38,7 @@ async def handle_music_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE
 
         # Отправляем как голосовое сообщение
         with open(audio_path, "rb") as audio_file:
-            await update.message.reply_voice(voice=audio_file, caption="🎶 Вот твоя музыка!")
+            await message.reply_voice(voice=audio_file, caption="🎶 Вот твоя музыка!")
 
     except Exception as e:
-        await update.message.reply_text(f"⚠️ Ошибка при генерации музыки: {e}")
-
+        await message.reply_text(f"⚠️ Ошибка при генерации музыки: {e}")
