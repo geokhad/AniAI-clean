@@ -11,17 +11,11 @@ async def translate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     active_translators.add(user_id)
     await update.message.reply_text(
-        "🌐 Введи текст для перевода.
-"
-        "AniAI автоматически:
-"
-        "1️⃣ Переведёт текст (EN ⇄ RU)
-"
-        "2️⃣ Объяснит перевод
-"
-        "3️⃣ Даст альтернативы, если нужно
-
-"
+        "🌐 Введи текст для перевода.\n"
+        "AniAI автоматически:\n"
+        "1️⃣ Переведёт текст (EN ⇄ RU)\n"
+        "2️⃣ Объяснит перевод\n"
+        "3️⃣ Даст альтернативы, если нужно\n\n"
         "📋 Чтобы выйти — нажми кнопку ниже или напиши /menu.",
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("📋 Главное меню", callback_data="go_menu")]
@@ -56,8 +50,7 @@ async def handle_translation_text(update: Update, context: ContextTypes.DEFAULT_
             messages=[{"role": "user", "content": prompt}]
         )
         translation = response.choices[0].message.content.strip()
-        await update.message.reply_text(f"🌍 Перевод и объяснение:
-{translation}")
+        await update.message.reply_text(f"🌍 Перевод и объяснение:\n{translation}")
 
         # ✅ Логирование перевода
         log_translation(
@@ -68,5 +61,4 @@ async def handle_translation_text(update: Update, context: ContextTypes.DEFAULT_
         )
 
     except Exception as e:
-        await update.message.reply_text(f"⚠️ Ошибка при переводе:
-{e}")
+        await update.message.reply_text(f"⚠️ Ошибка при переводе:\n{e}")
