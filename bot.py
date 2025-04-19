@@ -52,8 +52,8 @@ app.add_handler(CommandHandler("image", generate_image))      # Генераци
 app.add_handler(CommandHandler("music", handle_music_prompt)) # 🎼 Музыка по команде
 
 # Обработчики кнопок и меню
+app.add_handler(CallbackQueryHandler(handle_daily_answer, pattern="^daily_answer\\|"))  # ✅ Новый обработчик
 app.add_handler(CallbackQueryHandler(handle_button))
-app.add_handler(CallbackQueryHandler(handle_daily_answer))  # ✅ Новый обработчик
 
 # Обработчики сообщений
 app.add_handler(MessageHandler(filters.Document.ALL, analyze))                             # 📎 Документы
