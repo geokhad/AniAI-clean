@@ -8,18 +8,21 @@ active_quizzes = {}
 
 # 📘 Отправка теста
 async def start_daily_english(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    question = random.choice(questions)
-    active_quizzes[user_id] = question
+    query = update.callback_query
+    if query:
+        await query.answer()
+        user_id = query.from_user.id
+        question = random.choice(questions)
+        active_quizzes[user_id] = question
 
-    keyboard = [[InlineKeyboardButton(opt, callback_data=f"daily_answer|{opt}")] for opt in question["options"]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
+        keyboard = [[InlineKeyboardButton(opt, callback_data=f"daily_answer|{opt}")] for opt in question["options"]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.message.reply_text(
-        f"📝 <b>Question 1:</b>\n{question['question']}",
-        parse_mode="HTML",
-        reply_markup=reply_markup
-    )
+        await query.message.reply_text(
+            f"📝 <b>Question 1:</b>\n{question['question']}\n\n💬 Example: {question['example']}",
+            parse_mode="HTML",
+            reply_markup=reply_markup
+        )
 
 # 📘 Обработка ответа
 async def handle_daily_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
