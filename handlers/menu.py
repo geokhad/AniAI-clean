@@ -11,43 +11,33 @@ from handlers.state import (
 
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
-        # 🔹 AI-функции
         [
-            InlineKeyboardButton("🧠 Вопрос", callback_data="gpt_help"),
-            InlineKeyboardButton("🎨 Картинка", callback_data="image_help")
+            InlineKeyboardButton("🔷 🧠 Вопрос", callback_data="gpt_help"),
+            InlineKeyboardButton("🔷 🎨 Картинка", callback_data="image_help")
         ],
         [
-            InlineKeyboardButton("🎼 Музыка", callback_data="music_help"),
-            InlineKeyboardButton("📽 Видео", callback_data="video_help")
+            InlineKeyboardButton("🔷 🎼 Музыка", callback_data="music_help"),
+            InlineKeyboardButton("🔷 🎬 Видео", callback_data="video_help")
         ],
-
-        # 🔸 Утилиты
         [
-            InlineKeyboardButton("📄 Документ", callback_data="analyze_help"),
-            InlineKeyboardButton("🌍 Перевод", callback_data="translate")
+            InlineKeyboardButton("🔷 📄 Документ", callback_data="analyze_help"),
+            InlineKeyboardButton("🔷 🌍 Перевод", callback_data="translate")
         ],
-
-        # 🔸 Интерактив
         [
-            InlineKeyboardButton("🎙 Голос", callback_data="voice_mode"),
-            InlineKeyboardButton("🔊 Озвучка", callback_data="tts_mode")
+            InlineKeyboardButton("🟧 🎙 Голос", callback_data="voice_mode"),
+            InlineKeyboardButton("🟧 🗣 Озвучка", callback_data="tts_mode")
         ],
-
         [
-            InlineKeyboardButton("💎 Премиум", callback_data="premium_mode"),
-            InlineKeyboardButton("💼 Партнёрка", callback_data="affiliate")
+            InlineKeyboardButton("🟧 💎 Премиум", callback_data="premium_mode"),
+            InlineKeyboardButton("🟧 🤝 Партнёрка", callback_data="affiliate")
         ],
-
-        [InlineKeyboardButton("✍️ Отзыв", callback_data="feedback")]
+        [
+            InlineKeyboardButton("🟠 ✍️ Отзыв", callback_data="feedback")
+        ]
     ]
-
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="📋 <b>Главное меню AniAI:</b>\n\n"
-             "🔹 <b>AI-функции</b>\n"
-             "🔸 <b>Утилиты</b>\n"
-             "🔸 <b>Интерактив</b>",
-        parse_mode="HTML",
+        text="📋 Главное меню AniAI:",
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
 
@@ -68,9 +58,9 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 • 🧠 Отвечаю на вопросы и объясняю сложное простыми словами
 • 🎨 Генерирую картинки по твоему описанию
 • 🎼 Создаю музыку по твоим ощущениям
-• 📽 Готовлю видео (в разработке)
+• 🎬 В перспективе — генерирую видео
 • 🌍 Перевожу тексты и распознаю языки
-• 🔊 Озвучиваю текст голосом
+• 🎧 Озвучиваю текст женским голосом
 • 📄 Обрабатываю и пересказываю документы
 
 И всё это — прямо в Telegram!
@@ -100,7 +90,7 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if query.data == "video_help":
-        await context.bot.send_message(chat_id=query.message.chat.id, text="📽 Функция генерации видео сейчас в разработке.")
+        await context.bot.send_message(chat_id=query.message.chat.id, text="🎬 Функция генерации видео сейчас в разработке.")
         return
 
     if query.data == "analyze_help":
@@ -123,7 +113,7 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         active_tts.add(user_id)
         await context.bot.send_message(
             chat_id=query.message.chat.id,
-            text="🔊 Введи фразу — я озвучу её своим голосом."
+            text="🗣 Введи фразу — я озвучу её своим голосом."
         )
         return
 
