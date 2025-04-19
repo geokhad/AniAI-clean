@@ -23,7 +23,7 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
      InlineKeyboardButton("💼 Партнёрка", callback_data="affiliate")],
     [InlineKeyboardButton("✍️ Отзыв", callback_data="feedback")]
 ]
-    ]
+
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="📋 Главное меню AniAI:",
