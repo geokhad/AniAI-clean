@@ -1,4 +1,3 @@
-
 import os
 from dotenv import load_dotenv
 
@@ -28,6 +27,7 @@ from handlers.analyze import analyze
 from handlers.text import handle_text_message
 from handlers.voice import handle_voice_message  # ✅ Только голосовой ввод
 from handlers.music import handle_music_prompt   # 🎼 Добавлен для генерации музыки
+from handlers.daily_english import start_daily_english, handle_daily_answer  # ✅ Новый модуль
 
 # Логи
 logging.basicConfig(level=logging.INFO)
@@ -53,6 +53,7 @@ app.add_handler(CommandHandler("music", handle_music_prompt)) # 🎼 Музык�
 
 # Обработчики кнопок и меню
 app.add_handler(CallbackQueryHandler(handle_button))
+app.add_handler(CallbackQueryHandler(handle_daily_answer))  # ✅ Новый обработчик
 
 # Обработчики сообщений
 app.add_handler(MessageHandler(filters.Document.ALL, analyze))                             # 📎 Документы
@@ -75,10 +76,9 @@ async def main():
 
     # Команды в Telegram
     await app.bot.set_my_commands([
-    BotCommand("menu", "📋 Главное меню AniAI"),
-    # BotCommand("music", "🎼 Сгенерировать музыку")  # ❌ Удалить или закомментировать
-])
-
+        BotCommand("menu", "📋 Главное меню AniAI")
+        # BotCommand("music", "🎼 Сгенерировать музыку")  # ❌ Удалено
+    ])
 
     await app.bot.set_webhook(url=WEBHOOK_URL)
     await app.start()

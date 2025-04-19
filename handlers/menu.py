@@ -8,6 +8,7 @@ from handlers.state import (
     clear_user_state,
     active_tts
 )
+from handlers.daily_english import start_daily_english  # ✅ Добавлено
 
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
@@ -26,6 +27,9 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [
             InlineKeyboardButton(" 🎙 Голос", callback_data="voice_mode"),
             InlineKeyboardButton(" 🗣 Озвучка", callback_data="tts_mode")
+        ],
+        [
+            InlineKeyboardButton(" 📝 Daily English", callback_data="daily_english")
         ],
         [
             InlineKeyboardButton(" 💎 Премиум", callback_data="premium_mode"),
@@ -133,6 +137,10 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 💡 Говори со мной свободно — я подстроюсь под тебя 🪄""", parse_mode="HTML"
         )
+        return
+
+    if query.data == "daily_english":
+        await start_daily_english(update, context)
         return
 
     if query.data == "affiliate":

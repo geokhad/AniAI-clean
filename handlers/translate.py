@@ -11,9 +11,18 @@ async def translate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     active_translators.add(user_id)
     await update.message.reply_text(
-        "🌐 Введи текст для перевода.\n"
-        "AniAI будет автоматически переводить каждый введённый текст.\n\n"
-        "📋 Чтобы выйти из режима перевода — нажми кнопку ниже или напиши /menu.",
+        "🌐 Введи текст для перевода.
+"
+        "AniAI автоматически:
+"
+        "1️⃣ Переведёт текст (EN ⇄ RU)
+"
+        "2️⃣ Объяснит перевод
+"
+        "3️⃣ Даст альтернативы, если нужно
+
+"
+        "📋 Чтобы выйти — нажми кнопку ниже или напиши /menu.",
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("📋 Главное меню", callback_data="go_menu")]
         ])
@@ -36,8 +45,9 @@ async def handle_translation_text(update: Update, context: ContextTypes.DEFAULT_
         return
 
     prompt = (
-        "Переведи следующий текст с английского на русский или с русского на английский, "
-        "в зависимости от исходного языка:\n\n" + text
+        "Переведи следующий текст с английского на русский или с русского на английский "
+        "в зависимости от языка, объясни смысл перевода, особенно идиомы, и предложи альтернативы (если есть):\n\n"
+        f"{text}"
     )
 
     try:
@@ -45,8 +55,9 @@ async def handle_translation_text(update: Update, context: ContextTypes.DEFAULT_
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}]
         )
-        translation = response.choices[0].message.content
-        await update.message.reply_text(translation)
+        translation = response.choices[0].message.content.strip()
+        await update.message.reply_text(f"🌍 Перевод и объяснение:
+{translation}")
 
         # ✅ Логирование перевода
         log_translation(
@@ -57,6 +68,5 @@ async def handle_translation_text(update: Update, context: ContextTypes.DEFAULT_
         )
 
     except Exception as e:
-        await update.message.reply_text(f"⚠️ Ошибка при переводе:\n{e}")
-
-    # ⚠️ Не сбрасываем active_translators — режим остаётся активным
+        await update.message.reply_text(f"⚠️ Ошибка при переводе:
+{e}")
