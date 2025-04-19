@@ -12,27 +12,27 @@ from handlers.state import (
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [
-            InlineKeyboardButton("🔷 🧠 Вопрос", callback_data="gpt_help"),
-            InlineKeyboardButton("🔷 🎨 Картинка", callback_data="image_help")
+            InlineKeyboardButton(" 🧠 Вопрос", callback_data="gpt_help"),
+            InlineKeyboardButton(" 🎨 Картинка", callback_data="image_help")
         ],
         [
-            InlineKeyboardButton("🔷 🎼 Музыка", callback_data="music_help"),
-            InlineKeyboardButton("🔷 🎬 Видео", callback_data="video_help")
+            InlineKeyboardButton(" 🎼 Музыка", callback_data="music_help"),
+            InlineKeyboardButton(" 🎬 Видео", callback_data="video_help")
         ],
         [
-            InlineKeyboardButton("🔷 📄 Документ", callback_data="analyze_help"),
-            InlineKeyboardButton("🔷 🌍 Перевод", callback_data="translate")
+            InlineKeyboardButton(" 📄 Документ", callback_data="analyze_help"),
+            InlineKeyboardButton(" 🌍 Перевод", callback_data="translate")
         ],
         [
-            InlineKeyboardButton("🟧 🎙 Голос", callback_data="voice_mode"),
-            InlineKeyboardButton("🟧 🗣 Озвучка", callback_data="tts_mode")
+            InlineKeyboardButton(" 🎙 Голос", callback_data="voice_mode"),
+            InlineKeyboardButton(" 🗣 Озвучка", callback_data="tts_mode")
         ],
         [
-            InlineKeyboardButton("🟧 💎 Премиум", callback_data="premium_mode"),
-            InlineKeyboardButton("🟧 🤝 Партнёрка", callback_data="affiliate")
+            InlineKeyboardButton(" 💎 Премиум", callback_data="premium_mode"),
+            InlineKeyboardButton(" 🤝 Партнёрка", callback_data="affiliate")
         ],
         [
-            InlineKeyboardButton("🟠 ✍️ Отзыв", callback_data="feedback")
+            InlineKeyboardButton(" ✍️ Отзыв", callback_data="feedback")
         ]
     ]
     await context.bot.send_message(
