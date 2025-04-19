@@ -11,32 +11,43 @@ from handlers.state import (
 
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
-        # 🔹 Основное
-        [InlineKeyboardButton("🧠 Вопрос", callback_data="gpt_help"),
-         InlineKeyboardButton("📸 Картинка", callback_data="image_help")],
+        # 🔹 AI-функции
+        [
+            InlineKeyboardButton("🧠 Вопрос", callback_data="gpt_help"),
+            InlineKeyboardButton("🎨 Картинка", callback_data="image_help")
+        ],
+        [
+            InlineKeyboardButton("🎼 Музыка", callback_data="music_help"),
+            InlineKeyboardButton("📽 Видео", callback_data="video_help")
+        ],
 
-        # 🔹 Музыка и Видео
-        [InlineKeyboardButton("🎼 Музыка", callback_data="music_help"),
-         InlineKeyboardButton("🎬 Видео", callback_data="video_help")],
+        # 🔸 Утилиты
+        [
+            InlineKeyboardButton("📄 Документ", callback_data="analyze_help"),
+            InlineKeyboardButton("🌍 Перевод", callback_data="translate")
+        ],
 
-        # 🔹 Документы и Перевод
-        [InlineKeyboardButton("📄 Документ", callback_data="analyze_help"),
-         InlineKeyboardButton("🌍 Перевод", callback_data="translate")],
+        # 🔸 Интерактив
+        [
+            InlineKeyboardButton("🎙 Голос", callback_data="voice_mode"),
+            InlineKeyboardButton("🔊 Озвучка", callback_data="tts_mode")
+        ],
 
-        # 🔹 Голос и Озвучка
-        [InlineKeyboardButton("🎙 Голос", callback_data="voice_mode"),
-         InlineKeyboardButton("🗣 Озвучка", callback_data="tts_mode")],
+        [
+            InlineKeyboardButton("💎 Премиум", callback_data="premium_mode"),
+            InlineKeyboardButton("💼 Партнёрка", callback_data="affiliate")
+        ],
 
-        # 🔹 Дополнительно
-        [InlineKeyboardButton("💎 Премиум", callback_data="premium_mode"),
-         InlineKeyboardButton("🤝 Партнёрка", callback_data="affiliate")],
-
-        # 🔹 Последняя строка
         [InlineKeyboardButton("✍️ Отзыв", callback_data="feedback")]
     ]
+
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="📋 Главное меню AniAI:",
+        text="📋 <b>Главное меню AniAI:</b>\n\n"
+             "🔹 <b>AI-функции</b>\n"
+             "🔸 <b>Утилиты</b>\n"
+             "🔸 <b>Интерактив</b>",
+        parse_mode="HTML",
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
 
@@ -55,11 +66,11 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 Вот что я умею:
 • 🧠 Отвечаю на вопросы и объясняю сложное простыми словами
-• 📸 Генерирую картинки по твоему описанию
+• 🎨 Генерирую картинки по твоему описанию
 • 🎼 Создаю музыку по твоим ощущениям
-• 🎬 Видео — в разработке
+• 📽 Готовлю видео (в разработке)
 • 🌍 Перевожу тексты и распознаю языки
-• 🎧 Озвучиваю текст женским голосом
+• 🔊 Озвучиваю текст голосом
 • 📄 Обрабатываю и пересказываю документы
 
 И всё это — прямо в Telegram!
@@ -80,7 +91,7 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         active_imagers.add(user_id)
         await context.bot.send_message(
             chat_id=query.message.chat.id,
-            text="📸 Опиши, что ты хочешь увидеть. Например: «город на облаках в стиле стимпанк»"
+            text="🎨 Опиши, что ты хочешь увидеть. Например: «город на облаках в стиле стимпанк»"
         )
         return
 
@@ -89,7 +100,7 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if query.data == "video_help":
-        await context.bot.send_message(chat_id=query.message.chat.id, text="🎬 Функция генерации видео сейчас в разработке.")
+        await context.bot.send_message(chat_id=query.message.chat.id, text="📽 Функция генерации видео сейчас в разработке.")
         return
 
     if query.data == "analyze_help":
@@ -112,7 +123,7 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         active_tts.add(user_id)
         await context.bot.send_message(
             chat_id=query.message.chat.id,
-            text="🗣 Введи фразу — я озвучу её своим голосом."
+            text="🔊 Введи фразу — я озвучу её своим голосом."
         )
         return
 
@@ -130,8 +141,7 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 • Продиктовать текст — я предложу перевод, если язык другой
 • Задать вопрос — и я включу режим ответа
 
-💡 Говори со мной свободно — я подстроюсь под тебя 🪄""",
-            parse_mode="HTML"
+💡 Говори со мной свободно — я подстроюсь под тебя 🪄""", parse_mode="HTML"
         )
         return
 
