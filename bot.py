@@ -1,10 +1,9 @@
 import os
 from dotenv import load_dotenv
+load_dotenv(dotenv_path=".env")
 
-load_dotenv(dotenv_path=".env")  # <-- уточни путь явно
 import logging
 import asyncio
-
 from aiohttp import web
 from telegram import Update, BotCommand
 from telegram.ext import (
@@ -25,14 +24,19 @@ from handlers.translate import translate
 from handlers.image import generate_image
 from handlers.analyze import analyze
 from handlers.text import handle_text_message
-from handlers.voice import handle_voice_message  # ✅ Только голосовой ввод
-from handlers.music import handle_music_prompt   # 🎼 Добавлен для генерации музыки
-from handlers.daily_english import start_daily_english, handle_daily_answer  # ✅ Новый модуль
+from handlers.voice import handle_voice_message
+from handlers.music import handle_music_prompt
+from handlers.daily_english import start_daily_english, handle_daily_answer
+from handlers.spaced_repetition import (
+    start_spaced_vocab,
+    handle_voa_voice,
+    handle_voa_text,
+    handle_vocab_response
+)
 
 # Логи
 logging.basicConfig(level=logging.INFO)
 nest_asyncio.apply()
-load_dotenv()
 
 # Конфигурация
 TOKEN = os.getenv("TOKEN")
@@ -46,21 +50,23 @@ app = ApplicationBuilder().token(TOKEN).build()
 # Обработчики команд
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("menu", menu))
-app.add_handler(CommandHandler("ask", handle_ask))            # GPT
-app.add_handler(CommandHandler("translate", translate))       # Перевод
-app.add_handler(CommandHandler("image", generate_image))      # Генерация изображений
-app.add_handler(CommandHandler("music", handle_music_prompt)) # 🎼 Музыка по команде
+app.add_handler(CommandHandler("ask", handle_ask))
+app.add_handler(CommandHandler("translate", translate))
+app.add_handler(CommandHandler("image", generate_image))
+app.add_handler(CommandHandler("music", handle_music_prompt))
+app.add_handler(CommandHandler("spaced", start_spaced_vocab))
 
-# Обработчики кнопок и меню
-app.add_handler(CallbackQueryHandler(handle_daily_answer, pattern="^daily_answer\\|"))  # ✅ Новый обработчик
+# Callback (кнопки)
 app.add_handler(CallbackQueryHandler(handle_button))
+app.add_handler(CallbackQueryHandler(handle_daily_answer))
+app.add_handler(CallbackQueryHandler(handle_vocab_response))  # ← обработка кнопок повтора/запоминания
 
-# Обработчики сообщений
-app.add_handler(MessageHandler(filters.Document.ALL, analyze))                             # 📎 Документы
-app.add_handler(MessageHandler(filters.VOICE, handle_voice_message))                      # 🎙 Голосовые
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))     # ✍️ Текстовые
+# Сообщения
+app.add_handler(MessageHandler(filters.Document.ALL, analyze))
+app.add_handler(MessageHandler(filters.VOICE, handle_voa_voice))  # 🎙 проверка произношения
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_voa_text))  # ✍️ текстовый ввод
 
-# Webhook-сервер
+# Webhook
 async def handle_telegram(request):
     data = await request.json()
     update = Update.de_json(data, app.bot)
@@ -70,20 +76,18 @@ async def handle_telegram(request):
 async def handle_check(request):
     return web.Response(text="AniAI on Railway ✅")
 
-# Запуск приложения
+# Запуск
 async def main():
     await app.initialize()
 
-    # Команды в Telegram
     await app.bot.set_my_commands([
-        BotCommand("menu", "📋 Главное меню AniAI")
-        # BotCommand("music", "🎼 Сгенерировать музыку")  # ❌ Удалено
+        BotCommand("menu", "📋 Главное меню AniAI"),
+        BotCommand("spaced", "🧠 Повторить слова (VOA)")
     ])
 
     await app.bot.set_webhook(url=WEBHOOK_URL)
     await app.start()
 
-    # HTTP-сервер
     web_app = web.Application()
     web_app.router.add_post("/", handle_telegram)
     web_app.router.add_get("/", handle_check)
