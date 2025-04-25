@@ -47,3 +47,7 @@ def log_translation(user_id, full_name, source_text, translation):
 def log_document_analysis(user_id, full_name, file_name, result):
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
     append_to_sheet("Analyze", [str(user_id), full_name, file_name, result, now])
+
+def log_voa_word(user_id, full_name, word):
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    append_to_sheet("VOA", [str(user_id), full_name, word, now])
