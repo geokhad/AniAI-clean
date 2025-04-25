@@ -50,4 +50,8 @@ def log_document_analysis(user_id, full_name, file_name, result):
 
 def log_voa_word(user_id, full_name, word):
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
-    append_to_sheet("VOA", [str(user_id), full_name, word, now])
+    append_to_sheet("VOA Words", [str(user_id), full_name, word, now])
+
+def log_voa_memory(user_id, word, success: bool):
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    append_to_sheet("VOA Memory", [str(user_id), word, "✔️" if success else "❌", now])
