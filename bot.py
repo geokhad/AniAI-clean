@@ -1,3 +1,4 @@
+
 import os
 import logging
 import asyncio
@@ -28,7 +29,7 @@ from handlers.text import handle_text_message
 from handlers.voice import handle_voice_message
 from handlers.music import handle_music_prompt
 from handlers.daily_english import handle_daily_answer
-from handlers.spaced_repetition import start_spaced_vocab, handle_vocab_response  # ✅
+from handlers.spaced_repetition import start_spaced_vocab, handle_vocab_response
 
 # Логирование
 logging.basicConfig(level=logging.INFO)
@@ -50,12 +51,12 @@ app.add_handler(CommandHandler("ask", handle_ask))
 app.add_handler(CommandHandler("translate", translate))
 app.add_handler(CommandHandler("image", generate_image))
 app.add_handler(CommandHandler("music", handle_music_prompt))
-app.add_handler(CommandHandler("spaced", start_spaced_vocab))  # ✅ на всякий случай
+app.add_handler(CommandHandler("spaced", start_spaced_vocab))  # 🔁
 
 # Callback-кнопки
 app.add_handler(CallbackQueryHandler(handle_button))
 app.add_handler(CallbackQueryHandler(handle_daily_answer, pattern="^daily_answer"))
-app.add_handler(CallbackQueryHandler(handle_vocab_response, pattern="^vocab_"))  # ✅
+app.add_handler(CallbackQueryHandler(handle_vocab_response, pattern="^vocab_"))
 
 # Обработка сообщений
 app.add_handler(MessageHandler(filters.Document.ALL, analyze))
@@ -79,7 +80,7 @@ async def main():
 
     await app.bot.set_my_commands([
         BotCommand("menu", "📋 Главное меню AniAI"),
-        BotCommand("spaced", "🧠 Повторение слов")
+        BotCommand("spaced", "🎧 VOA Exam Practice")
     ])
 
     await app.bot.set_webhook(url=WEBHOOK_URL)
