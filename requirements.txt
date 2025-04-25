@@ -9,5 +9,6 @@ python-docx
 pymupdf
 pydub
 requests
+SpeechRecognition  
 
 
