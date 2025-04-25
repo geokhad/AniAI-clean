@@ -6,7 +6,7 @@ from handlers.state import (
     active_imagers,
     active_analyzers,
     clear_user_state,
-    active_tts,
+    active_tts
 )
 from handlers.daily_english import start_daily_english
 from handlers.spaced_repetition import start_spaced_vocab  # ✅ Добавлено
@@ -31,7 +31,7 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ],
         [
             InlineKeyboardButton("📝 Daily English", callback_data="daily_english"),
-            InlineKeyboardButton("🧠 VOA exam", callback_data="spaced_vocab")  # ✅ Добавлено
+            InlineKeyboardButton("🧠 VOA exam", callback_data="voa_vocab")  # ✅ Добавлено
         ],
         [
             InlineKeyboardButton("💎 Премиум", callback_data="premium_mode"),
@@ -52,109 +52,70 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     user_id = query.from_user.id
 
-    if query.data in [
-        "go_menu", "voice_mode", "tts_mode", "change_language", "premium_mode", "feedback"
-    ]:
+    if query.data in ["go_menu", "voice_mode", "tts_mode", "change_language", "premium_mode", "feedback"]:
         clear_user_state(user_id)
 
     if query.data == "go_menu":
-        intro = """👋 Рада тебя видеть! Я — AniAI, твоя помощница на базе нейросетей.
-
-✨ Делай то, что хочешь, когда хочешь и так долго, как хочешь.
-
-Вот что я умею:
-• 🧠 Отвечаю на вопросы и объясняю сложное простыми словами
-• 🎨 Генерирую картинки по твоему описанию
-• 🎼 Создаю музыку по твоим ощущениям
-• 🎬 В перспективе — генерирую видео
-• 🌍 Перевожу тексты и распознаю языки
-• 🎧 Озвучиваю текст женским голосом
-• 📄 Обрабатываю и пересказываю документы
-• 🧠 Помогаю учить английский с голосом и повторением
-
-👇 Выбери, с чего хочешь начать:"""
-        await context.bot.send_message(chat_id=query.message.chat.id, text=intro)
         await menu(update, context)
         return
 
     if query.data == "gpt_help":
         active_ask.add(user_id)
-        await context.bot.send_message(
-            chat_id=query.message.chat.id,
-            text="🧠 Просто задай вопрос, и я постараюсь объяснить всё ясно и по делу."
-        )
+        await context.bot.send_message(chat_id=query.message.chat.id, text="🧠 Просто задай вопрос...")
         return
 
     if query.data == "image_help":
         active_imagers.add(user_id)
-        await context.bot.send_message(
-            chat_id=query.message.chat.id,
-            text="🎨 Опиши, что ты хочешь увидеть. Например: «город на облаках в стиле стимпанк»"
-        )
+        await context.bot.send_message(chat_id=query.message.chat.id, text="🎨 Опиши изображение...")
         return
 
     if query.data == "music_help":
-        await context.bot.send_message(chat_id=query.message.chat.id, text="🎼 Функция генерации музыки сейчас в разработке.")
+        await context.bot.send_message(chat_id=query.message.chat.id, text="🎼 Генерация музыки в разработке.")
         return
 
     if query.data == "video_help":
-        await context.bot.send_message(chat_id=query.message.chat.id, text="🎬 Функция генерации видео сейчас в разработке.")
+        await context.bot.send_message(chat_id=query.message.chat.id, text="🎬 Генерация видео в разработке.")
         return
 
     if query.data == "analyze_help":
         active_analyzers.add(user_id)
-        await context.bot.send_message(
-            chat_id=query.message.chat.id,
-            text="📄 Прикрепи документ (PDF, DOCX, TXT) — и я сделаю краткий пересказ или анализ."
-        )
+        await context.bot.send_message(chat_id=query.message.chat.id, text="📄 Прикрепи документ для анализа.")
         return
 
     if query.data == "translate":
         active_translators.add(user_id)
-        await context.bot.send_message(
-            chat_id=query.message.chat.id,
-            text="🌍 Введи текст — я переведу его на нужный язык."
-        )
+        await context.bot.send_message(chat_id=query.message.chat.id, text="🌍 Введи текст для перевода.")
         return
 
     if query.data == "tts_mode":
         active_tts.add(user_id)
-        await context.bot.send_message(
-            chat_id=query.message.chat.id,
-            text="🗣 Введи фразу — я озвучу её своим голосом."
-        )
+        await context.bot.send_message(chat_id=query.message.chat.id, text="🗣 Введи текст для озвучки.")
         return
 
     if query.data == "voice_mode":
-        await context.bot.send_message(
-            chat_id=query.message.chat.id,
-            text="🎙 Просто отправь голосовое сообщение, и я пойму, что ты хочешь 🤖"
-        )
+        await context.bot.send_message(chat_id=query.message.chat.id, text="🎙 Отправь голосовое сообщение...")
         return
 
     if query.data == "daily_english":
         await start_daily_english(update, context)
         return
 
-    if query.data == "spaced_vocab":
-        await start_spaced_vocab(update, context)
+    if query.data == "voa_vocab":
+        await start_spaced_vocab(update, context)  # ✅ Обработчик для кнопки VOA exam
         return
 
     if query.data == "affiliate":
-        await context.bot.send_message(
-            chat_id=query.message.chat.id,
-            text="🤝 Приглашай друзей и получай бонусы! Подробности — @AniAI_supportbot"
-        )
+        await context.bot.send_message(chat_id=query.message.chat.id, text="🤝 Партнёрская программа...")
         return
 
     responses = {
-        "change_language": "🌐 Переключение языка будет доступно в следующем обновлении.",
-        "premium_mode": "💎 Премиум режим скоро появится!",
-        "feedback": "📬 Напиши своё мнение или пожелание: @AniAI_supportbot"
+        "change_language": "🌐 Язык будет доступен позже.",
+        "premium_mode": "💎 Премиум режим скоро появится.",
+        "feedback": "✍️ Напиши отзыв: @AniAI_supportbot"
     }
 
-    if query.data in responses:
-        await context.bot.send_message(
-            chat_id=query.message.chat.id,
-            text=responses[query.data]
-        )
+    response = responses.get(query.data)
+    if response:
+        await context.bot.send_message(chat_id=query.message.chat.id, text=response)
+    else:
+        await context.bot.send_message(chat_id=query.message.chat.id, text="⚙️ Функция в разработке.")

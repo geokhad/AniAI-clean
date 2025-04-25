@@ -1,9 +1,8 @@
 import os
-from dotenv import load_dotenv
-load_dotenv(dotenv_path=".env")
-
 import logging
 import asyncio
+import nest_asyncio
+from dotenv import load_dotenv
 from aiohttp import web
 from telegram import Update, BotCommand
 from telegram.ext import (
@@ -14,27 +13,24 @@ from telegram.ext import (
     ContextTypes,
     filters,
 )
-import nest_asyncio
 
-# Импорты обработчиков
-from handlers.chat import handle_ask
+# Загрузка переменных окружения
+load_dotenv(dotenv_path=".env")
+
+# Импорт обработчиков
 from handlers.start import start
 from handlers.menu import menu, handle_button
+from handlers.chat import handle_ask
 from handlers.translate import translate
 from handlers.image import generate_image
 from handlers.analyze import analyze
 from handlers.text import handle_text_message
 from handlers.voice import handle_voice_message
 from handlers.music import handle_music_prompt
-from handlers.daily_english import start_daily_english, handle_daily_answer
-from handlers.spaced_repetition import (
-    start_spaced_vocab,
-    handle_voa_voice,
-    handle_voa_text,
-    handle_vocab_response
-)
+from handlers.daily_english import handle_daily_answer
+from handlers.spaced_repetition import start_spaced_vocab, handle_vocab_response  # ✅
 
-# Логи
+# Логирование
 logging.basicConfig(level=logging.INFO)
 nest_asyncio.apply()
 
@@ -44,50 +40,52 @@ WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 PORT = int(os.environ.get("PORT", 8080))
 HOST = "0.0.0.0"
 
-# Приложение Telegram
+# Создание приложения
 app = ApplicationBuilder().token(TOKEN).build()
 
-# Обработчики команд
+# Команды
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("menu", menu))
 app.add_handler(CommandHandler("ask", handle_ask))
 app.add_handler(CommandHandler("translate", translate))
 app.add_handler(CommandHandler("image", generate_image))
 app.add_handler(CommandHandler("music", handle_music_prompt))
-app.add_handler(CommandHandler("spaced", start_spaced_vocab))
+app.add_handler(CommandHandler("spaced", start_spaced_vocab))  # ✅ на всякий случай
 
-# Callback (кнопки)
+# Callback-кнопки
 app.add_handler(CallbackQueryHandler(handle_button))
-app.add_handler(CallbackQueryHandler(handle_daily_answer))
-app.add_handler(CallbackQueryHandler(handle_vocab_response))  # ← обработка кнопок повтора/запоминания
+app.add_handler(CallbackQueryHandler(handle_daily_answer, pattern="^daily_answer"))
+app.add_handler(CallbackQueryHandler(handle_vocab_response, pattern="^vocab_"))  # ✅
 
-# Сообщения
+# Обработка сообщений
 app.add_handler(MessageHandler(filters.Document.ALL, analyze))
-app.add_handler(MessageHandler(filters.VOICE, handle_voa_voice))  # 🎙 проверка произношения
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_voa_text))  # ✍️ текстовый ввод
+app.add_handler(MessageHandler(filters.VOICE, handle_voice_message))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
 
-# Webhook
+# Webhook хендлер
 async def handle_telegram(request):
     data = await request.json()
     update = Update.de_json(data, app.bot)
     await app.process_update(update)
     return web.Response(text="OK")
 
+# Тестовая страница
 async def handle_check(request):
     return web.Response(text="AniAI on Railway ✅")
 
-# Запуск
+# Главный запуск
 async def main():
     await app.initialize()
 
     await app.bot.set_my_commands([
         BotCommand("menu", "📋 Главное меню AniAI"),
-        BotCommand("spaced", "🧠 Повторить слова (VOA)")
+        BotCommand("spaced", "🧠 Повторение слов")
     ])
 
     await app.bot.set_webhook(url=WEBHOOK_URL)
     await app.start()
 
+    # HTTP-сервер
     web_app = web.Application()
     web_app.router.add_post("/", handle_telegram)
     web_app.router.add_get("/", handle_check)
@@ -97,7 +95,7 @@ async def main():
     site = web.TCPSite(runner, HOST, PORT)
     await site.start()
 
-    print(f"✅ AniAI слушает Webhook на {WEBHOOK_URL}")
+    print(f"✅ AniAI listening at {WEBHOOK_URL}")
     await asyncio.Event().wait()
 
 if __name__ == "__main__":

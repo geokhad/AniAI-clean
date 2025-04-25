@@ -1,44 +1,36 @@
 import os
-import subprocess
-from openai import OpenAI
-from telegram import Update
-from telegram.ext import ContextTypes
+import uuid
+from pydub import AudioSegment
+import speech_recognition as sr
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+recognizer = sr.Recognizer()
 
-# 🎙 Распознавание речи из голосового сообщения
-async def recognize_speech_from_voice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
-    voice = update.message.voice
-    if not voice:
-        return ""
+async def recognize_speech_from_voice(update, context):
+    user_id = update.effective_user.id
+    file = await context.bot.get_file(update.message.voice.file_id)
 
-    file = await context.bot.get_file(voice.file_id)
-    ogg_path = f"/tmp/{voice.file_unique_id}.ogg"
+    # Уникальные имена файлов
+    ogg_path = f"/tmp/{user_id}_{uuid.uuid4()}.ogg"
     wav_path = ogg_path.replace(".ogg", ".wav")
+
     await file.download_to_drive(ogg_path)
 
-    subprocess.run(
-        ["ffmpeg", "-y", "-i", ogg_path, "-ar", "16000", "-ac", "1", wav_path],
-        check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-    )
+    # Конвертация ogg в wav
+    audio = AudioSegment.from_ogg(ogg_path)
+    audio.export(wav_path, format="wav")
 
-    with open(wav_path, "rb") as audio_file:
-        transcript = client.audio.transcriptions.create(
-            model="whisper-1",
-            file=audio_file,
-            response_format="text"
-        )
-    return transcript.strip()
+    # Распознавание
+    with sr.AudioFile(wav_path) as source:
+        audio_data = recognizer.record(source)
+        try:
+            text = recognizer.recognize_google(audio_data)
+        except sr.UnknownValueError:
+            text = "❗ I couldn't understand that."
+        except sr.RequestError as e:
+            text = f"❗ Recognition error: {e}"
 
-# 🔈 Генерация озвучки текста
-async def speak_text(text: str, user_id: int) -> str:
-    response = client.audio.speech.create(
-        model="tts-1",
-        voice="nova",
-        input=text
-    )
-    path = f"/tmp/tts-{user_id}.ogg"
-    with open(path, "wb") as f:
-        f.write(response.content)
-    return path
+    os.remove(ogg_path)
+    os.remove(wav_path)
 
+    print("Voice recognition complete:", text)
+    return text  # ✅ Добавлено
