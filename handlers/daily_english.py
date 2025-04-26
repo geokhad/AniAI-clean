@@ -12,17 +12,21 @@ async def start_daily_english(update: Update, context: ContextTypes.DEFAULT_TYPE
     if query:
         await query.answer()
         user_id = query.from_user.id
-        question = random.choice(questions)
-        active_quizzes[user_id] = question
+    else:
+        user_id = update.effective_user.id
 
-        keyboard = [[InlineKeyboardButton(opt, callback_data=f"daily_answer|{opt}")] for opt in question["options"]]
-        reply_markup = InlineKeyboardMarkup(keyboard)
+    question = random.choice(questions)
+    active_quizzes[user_id] = question
 
-        await query.message.reply_text(
-            f"📝 <b>Question 1:</b>\n{question['question']}\n\n💬 Example: {question['example']}",
-            parse_mode="HTML",
-            reply_markup=reply_markup
-        )
+    keyboard = [[InlineKeyboardButton(opt, callback_data=f"daily_answer|{opt}")] for opt in question["options"]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    await context.bot.send_message(
+        chat_id=user_id,
+        text=f"📝 <b>Question:</b>\n{question['question']}\n\n💬 Example: {question['example']}",
+        parse_mode="HTML",
+        reply_markup=reply_markup
+    )
 
 # 📘 Обработка ответа
 async def handle_daily_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -31,6 +35,7 @@ async def handle_daily_answer(update: Update, context: ContextTypes.DEFAULT_TYPE
     user_id = query.from_user.id
     data = query.data.split("|", 1)
 
+    # Обработка перехода к следующему вопросу
     if query.data == "daily_next":
         await start_daily_english(update, context)
         return
@@ -56,11 +61,12 @@ async def handle_daily_answer(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     await query.message.reply_text(reply, parse_mode="HTML")
 
-    # Кнопка Следующий вопрос
+    # Кнопка "Next Question"
     next_button = InlineKeyboardMarkup([
         [InlineKeyboardButton("➡️ Next Question", callback_data="daily_next")]
     ])
-    await query.message.reply_text("➡️ Готов к следующему?", reply_markup=next_button)
+    await query.message.reply_text("➡️ Готов к следующему вопросу?", reply_markup=next_button)
 
-    # Убираем старый активный вопрос
-    del active_quizzes[user_id]
+    # Очищаем старый активный вопрос
+    if user_id in active_quizzes:
+        del active_quizzes[user_id]
