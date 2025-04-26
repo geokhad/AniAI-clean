@@ -53,15 +53,15 @@ app.add_handler(CommandHandler("image", generate_image))
 app.add_handler(CommandHandler("music", handle_music_prompt))
 app.add_handler(CommandHandler("spaced", start_spaced_vocab))
 
-# Callback-кнопки
-app.add_handler(CallbackQueryHandler(handle_daily_answer, pattern="^daily_answer"))  # Daily English ответы
-app.add_handler(CallbackQueryHandler(handle_voa_button, pattern="^voa_next$"))        # Кнопка следующего слова в VOA
-app.add_handler(CallbackQueryHandler(handle_button))                                 # Все остальные кнопки
+# Callback-кнопки (обязательно порядок!)
+app.add_handler(CallbackQueryHandler(handle_daily_answer, pattern="^daily_answer"))
+app.add_handler(CallbackQueryHandler(handle_voa_button, pattern="^start_voa_exam$"))
+app.add_handler(CallbackQueryHandler(handle_button))  # Все остальные кнопки
 
 # Обработка сообщений
 app.add_handler(MessageHandler(filters.Document.ALL, analyze))
-app.add_handler(MessageHandler(filters.VOICE, handle_voice_message))  # ✅ ВСЕ голосовые сообщения через универсальный обработчик
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))  # ✅ ВСЕ текстовые сообщения через универсальный обработчик
+app.add_handler(MessageHandler(filters.VOICE, handle_voice_message))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
 
 # Webhook обработчик
 async def handle_telegram(request):
