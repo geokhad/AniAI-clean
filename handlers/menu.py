@@ -1,3 +1,52 @@
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ContextTypes
+from handlers.state import (
+    active_ask,
+    active_translators,
+    active_imagers,
+    active_analyzers,
+    clear_user_state,
+    active_tts
+)
+from handlers.daily_english import start_daily_english
+from handlers.exam_mode import start_voa_exam
+
+async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
+        [
+            InlineKeyboardButton(" 🧠 Вопрос", callback_data="gpt_help"),
+            InlineKeyboardButton(" 🎨 Картинка", callback_data="image_help")
+        ],
+        [
+            InlineKeyboardButton(" 🎼 Музыка", callback_data="music_help"),
+            InlineKeyboardButton(" 🎬 Видео", callback_data="video_help")
+        ],
+        [
+            InlineKeyboardButton(" 📄 Документ", callback_data="analyze_help"),
+            InlineKeyboardButton(" 🌍 Перевод", callback_data="translate")
+        ],
+        [
+            InlineKeyboardButton(" 🎙 Голос", callback_data="voice_mode"),
+            InlineKeyboardButton(" 🗣 Озвучка", callback_data="tts_mode")
+        ],
+        [
+            InlineKeyboardButton(" 📝 Daily English", callback_data="daily_english"),
+            InlineKeyboardButton(" 🧠 VOA exam", callback_data="voa_vocab")
+        ],
+        [
+            InlineKeyboardButton(" 💎 Премиум", callback_data="premium_mode"),
+            InlineKeyboardButton(" 🤝 Партнёрка", callback_data="affiliate")
+        ],
+        [
+            InlineKeyboardButton(" ✍️ Отзыв", callback_data="feedback")
+        ]
+    ]
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="📋 Главное меню AniAI:",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+
 async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
