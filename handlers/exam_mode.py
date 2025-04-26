@@ -30,16 +30,12 @@ async def start_voa_exam(update: Update, context: ContextTypes.DEFAULT_TYPE):
     active_voa_exam.add(user_id)
 
     await update.message.reply_text(
-        f"📘 Level: {word_data['level']}
-"
-        f"📚 Topic: {word_data['topic']}
+    f"📘 Level: {word_data['level']}\n"
+    f"📚 Topic: {word_data['topic']}\n\n"
+    f"🧠 Definition: {word_data['definition']}\n\n"
+    f"🎙 Say or type the word that matches this definition:"
+)
 
-"
-        f"🧠 Definition: {word_data['definition']}
-
-"
-        f"🎙 Say or type the word that matches this definition:"
-    )
 
 # 🧠 Обработка текстового ответа в exam-режиме
 async def handle_voa_text_exam(update: Update, context: ContextTypes.DEFAULT_TYPE):
