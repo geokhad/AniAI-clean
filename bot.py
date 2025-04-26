@@ -30,6 +30,7 @@ from handlers.voice import handle_voice_message
 from handlers.music import handle_music_prompt
 from handlers.daily_english import handle_daily_answer
 from handlers.spaced_repetition import start_spaced_vocab, handle_vocab_response
+from handlers.exam_mode import start_voa_exam, handle_voa_text_exam, handle_voa_voice_exam
 
 # Логирование
 logging.basicConfig(level=logging.INFO)
@@ -51,7 +52,7 @@ app.add_handler(CommandHandler("ask", handle_ask))
 app.add_handler(CommandHandler("translate", translate))
 app.add_handler(CommandHandler("image", generate_image))
 app.add_handler(CommandHandler("music", handle_music_prompt))
-app.add_handler(CommandHandler("spaced", start_spaced_vocab))  # 🔁
+app.add_handler(CommandHandler("spaced", start_spaced_vocab))
 
 # Callback-кнопки
 app.add_handler(CallbackQueryHandler(handle_button))
@@ -62,6 +63,10 @@ app.add_handler(CallbackQueryHandler(handle_vocab_response, pattern="^vocab_"))
 app.add_handler(MessageHandler(filters.Document.ALL, analyze))
 app.add_handler(MessageHandler(filters.VOICE, handle_voice_message))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
+
+# ➡️ Новые обработчики для VOA exam:
+app.add_handler(MessageHandler(filters.TEXT & filters.TEXT, handle_voa_text_exam))
+app.add_handler(MessageHandler(filters.VOICE, handle_voa_voice_exam))
 
 # Webhook хендлер
 async def handle_telegram(request):
