@@ -2,9 +2,10 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 import random
 import os
+from datetime import date, timedelta
 from openai import OpenAI
 from utils.spaced_words import spaced_words
-from utils.google_sheets import log_voa_word, log_voa_memory
+from utils.google_sheets import log_voa_word
 from utils.spaced_memory import update_word_memory
 from utils.voice_tools import recognize_speech_from_voice
 
@@ -14,10 +15,20 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 active_voa = set()
 user_words = {}
 
-# ▶️ Стартовая точка
+# ▶️ Стартовая точка (интервальное повторение по spaced_words)
 async def start_spaced_vocab(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    today = date.today().isoformat()
+
+    due_words = [word for word in spaced_words if word["next_review"] <= today]
+    if not due_words:
+        if update.message:
+            await update.message.reply_text("✅ Нет слов для повторения сегодня! Отличная работа!")
+        elif update.callback_query:
+            await update.callback_query.message.reply_text("✅ Нет слов для повторения сегодня! Отличная работа!")
+        return
+
+    word_data = random.choice(due_words)
     user_id = update.effective_user.id
-    word_data = random.choice(spaced_words)
     user_words[user_id] = word_data
     active_voa.add(user_id)
 
@@ -35,7 +46,7 @@ async def start_spaced_vocab(update: Update, context: ContextTypes.DEFAULT_TYPE)
     elif update.callback_query:
         chat_id = update.callback_query.message.chat.id
     else:
-        return  # Безопасный выход, если что-то не так
+        return
 
     with open(path, "rb") as audio_file:
         await context.bot.send_voice(chat_id=chat_id, voice=audio_file)
@@ -64,12 +75,12 @@ async def handle_voa_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if text == expected:
         await update.message.reply_text("✅ Correct! Well done.")
+        await update_word_progress(user_id)
     else:
         await update.message.reply_text(f"❌ Not quite. The correct word was: <b>{expected}</b>", parse_mode="HTML")
 
     await show_definition(update, user_words[user_id])
     log_voa_word(user_id, update.effective_user.full_name, user_words[user_id]['word'])
-    update_word_memory(user_id, user_words[user_id]['word'])
     active_voa.discard(user_id)
 
 # 🎙 Проверка голосового ответа
@@ -94,21 +105,16 @@ async def show_definition(update: Update, word_data: dict):
         parse_mode="HTML"
     )
 
-# 📚 Обработка нажатий кнопок
-async def handle_vocab_response(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    user_id = query.from_user.id
+# ✅ Обновление прогресса после правильного ответа
+async def update_word_progress(user_id):
+    today = date.today()
 
-    if user_id not in user_words:
-        await query.message.reply_text("❗ Start spaced repetition first: /spaced")
-        return
+    word = user_words[user_id]
+    word["interval_stage"] += 1
+    days_to_next = 2 ** word["interval_stage"]
+    next_review_date = today + timedelta(days=days_to_next)
 
-    if query.data == "vocab_repeat":
-        await start_spaced_vocab(update, context)
-        return
+    word["last_review"] = today.isoformat()
+    word["next_review"] = next_review_date.isoformat()
 
-    if query.data == "vocab_remember":
-        await query.message.reply_text("👍 Great! Let's practice another word!")
-        await start_spaced_vocab(update, context)
-        return
+    update_word_memory(user_id, word["word"])  # Логирование или обновление записи
