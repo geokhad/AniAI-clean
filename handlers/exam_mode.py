@@ -20,7 +20,10 @@ async def start_voa_exam(update: Update, context: ContextTypes.DEFAULT_TYPE):
     today = date.today().isoformat()
     due_words = [word for word in spaced_words if word["next_review"] <= today]
     if not due_words:
-        await update.message.reply_text("✅ No words to review today. Great job!")
+        if update.callback_query:
+            await update.callback_query.message.reply_text("✅ No words to review today. Great job!")
+        else:
+            await update.message.reply_text("✅ No words to review today. Great job!")
         return
 
     word_data = random.choice(due_words)
@@ -28,7 +31,12 @@ async def start_voa_exam(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_exam_words[user_id] = word_data
     active_voa_exam.add(user_id)
 
-    await update.message.reply_text(
+    if update.callback_query:
+        target = update.callback_query.message
+    else:
+        target = update.message
+
+    await target.reply_text(
         f"📘 Level: {word_data['level']}\n"
         f"📚 Topic: {word_data['topic']}\n\n"
         f"🧠 Definition: {word_data['definition']}\n\n"
