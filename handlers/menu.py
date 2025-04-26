@@ -10,7 +10,7 @@ from handlers.state import (
     active_tts
 )
 from handlers.daily_english import start_daily_english
-from handlers.exam_mode import start_voa_exam  # ✅ Актуальный импорт
+from handlers.exam_mode import start_voa_exam  # ✅ Новый корректный импорт
 
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
@@ -102,11 +102,11 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if query.data == "voa_vocab":
-        await start_voa_exam(update, context)  # ✅ Подключён новый модуль по правилам
+        await start_voa_exam(update, context)
         return
 
     if query.data == "affiliate":
-        await context.bot.send_message(chat_id=query.message.chat.id, text="🤝 Партнёрская программа...")
+        await context.bot.send_message(chat_id=query.message.chat.id, text="🤝 Партнёрская программа: пригласи друзей и получи бонусы!")
         return
 
     responses = {
