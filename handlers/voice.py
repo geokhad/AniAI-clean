@@ -9,7 +9,7 @@ from handlers.state import (
     active_translators,
     active_imagers,
     active_ask,
-    notified_voice_users
+    notified_voice_users,
 )
 from handlers.exam_mode import active_voa_exam, handle_voa_text_exam
 from utils.memory import get_memory, update_memory
@@ -64,14 +64,11 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
 
         # 🔁 Проверка режима VOA Exam
         if user_id in active_voa_exam:
-            # Создание искусственного текстового update для передачи в экзамен
-            update_copy = update
-            update_copy.message.text = text
-            await handle_voa_text_exam(update_copy, context)
+            await handle_voa_text_exam(update, context, recognized_text=text)
             return
 
         # 🖋️ Обычная обработка голосового ввода
-        await update.message.reply_text(f"📝 Распознано:\n{text}")
+        await update.message.reply_text(f"💡 Распознано:\n{text}")
 
         if user_id not in notified_voice_users:
             notified_voice_users.add(user_id)
@@ -149,7 +146,7 @@ async def translate_and_reply(update: Update, text: str, direction: str):
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка перевода: {e}")
 
-# 👨‍💻 Ответ на голосовые вопросы
+# 🤖 Ответ на голосовые вопросы
 async def gpt_answer(update: Update, prompt: str):
     user_id = update.effective_user.id
     history = get_memory(user_id)
