@@ -57,12 +57,12 @@ app.add_handler(CommandHandler("spaced", start_spaced_vocab))
 app.add_handler(CallbackQueryHandler(handle_daily_answer, pattern="^daily_answer"))
 app.add_handler(CallbackQueryHandler(handle_button))
 
-# Обработка сообщений (в правильном порядке!)
+# Обработка сообщений
 app.add_handler(MessageHandler(filters.Document.ALL, analyze))
-app.add_handler(MessageHandler(filters.VOICE, handle_voa_voice_exam))  # 🧠 Сначала голос для VOA
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_voa_text_exam))  # 🧠 Потом текст для VOA
-app.add_handler(MessageHandler(filters.VOICE, handle_voice_message))  # 🎙 Потом обычный голос
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))  # 📝 Потом обычный текст
+app.add_handler(MessageHandler(filters.VOICE, handle_voa_voice_exam))  # Экзамен первым!
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_voa_text_exam))
+app.add_handler(MessageHandler(filters.VOICE, handle_voice_message))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
 
 # Webhook хендлер
 async def handle_telegram(request):
@@ -81,12 +81,13 @@ async def main():
 
     await app.bot.set_my_commands([
         BotCommand("menu", "📋 Главное меню AniAI"),
-        BotCommand("spaced", "🎧 Интервальное повторение")
+        BotCommand("spaced", "🎿 Интервальное повторение")
     ])
 
     await app.bot.set_webhook(url=WEBHOOK_URL)
     await app.start()
 
+    # HTTP-сервер
     web_app = web.Application()
     web_app.router.add_post("/", handle_telegram)
     web_app.router.add_get("/", handle_check)
