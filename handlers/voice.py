@@ -59,15 +59,16 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             await update.message.reply_text("🚫 Обнаружен недопустимый или опасный запрос. Попробуй переформулировать.")
             return
 
+        lower = text.lower()
+
         # ✅ Если активирован режим VOA exam
         if user_id in active_voa_exam:
             update.message.text = text
             await handle_voa_text_exam(update, context)
             return
 
+        # 📝 Если пользователь не в режиме экзамена — обрабатываем обычные голосовые команды
         await update.message.reply_text(f"📝 Распознано:\n{text}")
-
-        lower = text.lower()
 
         if user_id not in notified_voice_users:
             notified_voice_users.add(user_id)
@@ -81,6 +82,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 "Я сам пойму, что ты хочешь 🤖"
             )
 
+        # Проверка голосовых команд
         if "переведи на русский" in lower:
             prompt = text.split("на русский", 1)[-1].strip()
             await translate_and_reply(update, prompt, "на русский")
@@ -184,19 +186,3 @@ async def handle_tts_playback(update: Update, text: str):
             await update.message.reply_voice(voice=audio_file)
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка TTS: {e}")
-        
-        # 📢 Озвучка через кнопку
-async def handle_tts_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    if user_id not in active_tts:
-        return
-    text = update.message.text.strip()
-    if not text:
-        await update.message.reply_text("⚠️ Пожалуйста, отправьте текст.")
-        return
-    if contains_prohibited_content(text):
-        await update.message.reply_text("🚫 Обнаружен недопустимый или опасный запрос. Попробуй переформулировать.")
-        return
-    await handle_tts_playback(update, text)
-    active_tts.discard(user_id)
-
