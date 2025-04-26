@@ -10,7 +10,7 @@ from handlers.state import (
     active_tts
 )
 from handlers.daily_english import start_daily_english
-from handlers.exam_mode import start_voa_exam  # ✅ Новый корректный импорт
+from handlers.exam_mode import start_voa_exam  # ✅ Добавлен новый импорт
 
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
@@ -32,7 +32,7 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ],
         [
             InlineKeyboardButton("📝 Daily English", callback_data="daily_english"),
-            InlineKeyboardButton("🧠 VOA exam", callback_data="voa_vocab")
+            InlineKeyboardButton("🧠 VOA exam", callback_data="voa_vocab")  # ✅ Добавлена кнопка
         ],
         [
             InlineKeyboardButton("💎 Премиум", callback_data="premium_mode"),
@@ -106,7 +106,7 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if query.data == "affiliate":
-        await context.bot.send_message(chat_id=query.message.chat.id, text="🤝 Партнёрская программа: пригласи друзей и получи бонусы!")
+        await context.bot.send_message(chat_id=query.message.chat.id, text="🤝 Партнёрская программа...")
         return
 
     responses = {
