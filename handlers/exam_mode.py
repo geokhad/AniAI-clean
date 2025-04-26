@@ -1,8 +1,8 @@
-import os
-import random
-from datetime import date
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
+import random
+import os
+from datetime import date
 from openai import OpenAI
 from utils.spaced_words import spaced_words
 from utils.google_sheets import log_voa_word
@@ -11,7 +11,7 @@ from utils.voice_tools import recognize_speech_from_voice
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Активные пользователи
+# Активные пользователи экзамена
 active_voa_exam = set()
 user_exam_words = {}
 
@@ -43,20 +43,16 @@ async def start_voa_exam(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"🎙 Say or type the word that matches this definition:"
     )
 
-# 🧬 Обработка текстового ответа
-async def handle_voa_text_exam(update: Update, context: ContextTypes.DEFAULT_TYPE, recognized_text: str = None):
+# 🧠 Обработка текстового ответа в экзамене
+async def handle_voa_text_exam(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id not in active_voa_exam:
         return
 
-    if recognized_text:
-        text = recognized_text.strip().lower()
-    else:
-        text = update.message.text.strip().lower()
-
+    text = update.message.text.strip().lower()
     await check_voa_answer(update, context, user_id, text)
 
-# 🎤 Обработка голосового ответа
+# 🎙 Обработка голосового ответа в экзамене
 async def handle_voa_voice_exam(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id not in active_voa_exam:
@@ -64,11 +60,11 @@ async def handle_voa_voice_exam(update: Update, context: ContextTypes.DEFAULT_TY
 
     text = await recognize_speech_from_voice(update, context)
     if text:
-        await handle_voa_text_exam(update, context, recognized_text=text)
+        await check_voa_answer(update, context, user_id, text.lower())
     else:
         await update.message.reply_text("⚠️ Sorry, I couldn't recognize your voice. Please try again.")
 
-# 🤖 Проверка ответа
+# ✅ Проверка правильности ответа
 async def check_voa_answer(update: Update, context: ContextTypes.DEFAULT_TYPE, user_id: int, text: str):
     correct_word = user_exam_words[user_id]["word"].lower()
 
@@ -82,15 +78,21 @@ async def check_voa_answer(update: Update, context: ContextTypes.DEFAULT_TYPE, u
     update_word_memory(user_id, correct_word)
     active_voa_exam.discard(user_id)
 
-    # ➔ Кнопка для следующего слова
+    # ➡️ Кнопка для следующего слова
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("➡️ Следующее слово", callback_data="start_voa_exam")]
+        [InlineKeyboardButton("➡️ Следующее слово", callback_data="voa_next")]
     ])
     await update.message.reply_text("Готов к следующему слову? Нажми кнопку!", reply_markup=keyboard)
 
-# 📖 Показ примера
+# 📖 Показ примера использования слова
 async def show_exam_example(update: Update, word_data: dict):
     await update.message.reply_text(
         f"💬 Example: {word_data['example']}",
         parse_mode="HTML"
     )
+
+# 🖱️ Обработка нажатия кнопки "Следующее слово"
+async def handle_voa_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    await start_voa_exam(update, context)
