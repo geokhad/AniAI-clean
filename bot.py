@@ -1,4 +1,3 @@
-
 import os
 import logging
 import asyncio
@@ -30,7 +29,7 @@ from handlers.voice import handle_voice_message
 from handlers.music import handle_music_prompt
 from handlers.daily_english import handle_daily_answer
 from handlers.spaced_repetition import start_spaced_vocab
-from handlers.exam_mode import start_voa_exam, handle_voa_text_exam, handle_voa_voice_exam  # ✅ Только добавлены эти 3
+from handlers.exam_mode import start_voa_exam, handle_voa_text_exam, handle_voa_voice_exam
 
 # Логирование
 logging.basicConfig(level=logging.INFO)
@@ -63,8 +62,8 @@ app.add_handler(MessageHandler(filters.Document.ALL, analyze))
 app.add_handler(MessageHandler(filters.VOICE, handle_voice_message))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
 
-# ✅ Обработка режима VOA Exam
-app.add_handler(MessageHandler(filters.TEXT & filters.TEXT, handle_voa_text_exam))
+# Обработка режима VOA Exam
+app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^🧠 VOA exam")), handle_voa_text_exam)
 app.add_handler(MessageHandler(filters.VOICE, handle_voa_voice_exam))
 
 # Webhook хендлер
