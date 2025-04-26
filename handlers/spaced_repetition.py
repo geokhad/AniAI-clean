@@ -117,4 +117,23 @@ async def update_word_progress(user_id):
     word["last_review"] = today.isoformat()
     word["next_review"] = next_review_date.isoformat()
 
-    update_word_memory(user_id, word["word"])  # Логирование или обновление записи
+    update_word_memory(user_id, word["word"])
+
+# 📚 Обработка нажатий кнопок "✅ I know it" и "🔁 Repeat word"
+async def handle_vocab_response(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    user_id = query.from_user.id
+
+    if user_id not in user_words:
+        await query.message.reply_text("❗ Start spaced repetition first by clicking on 'VOA Exam'.")
+        return
+
+    if query.data == "vocab_repeat":
+        await start_spaced_vocab(update, context)
+        return
+
+    if query.data == "vocab_remember":
+        await query.message.reply_text("👍 Great! Let's practice another word!")
+        await start_spaced_vocab(update, context)
+        return
