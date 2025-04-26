@@ -63,12 +63,12 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
 
         # ✅ Если пользователь находится в режиме VOA Exam
         if user_id in active_voa_exam:
-            # Создаём новый Update-like объект для передачи текста
-            update.message.text = text
+            # Имитация текстового ответа
+            update.effective_message.text = text
             await handle_voa_text_exam(update, context)
             return
 
-        # 📝 Иначе обычная обработка голосовых команд
+        # 📝 Обычная обработка голосовых команд
         await update.message.reply_text(f"📝 Распознано:\n{text}")
 
         if user_id not in notified_voice_users:

@@ -15,7 +15,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 active_voa_exam = set()
 user_exam_words = {}
 
-# ▶️ Запуск VOA exam: бот показывает определение, а не само слово
+# ▶️ Запуск VOA exam
 async def start_voa_exam(update: Update, context: ContextTypes.DEFAULT_TYPE):
     today = date.today().isoformat()
     due_words = [word for word in spaced_words if word["next_review"] <= today]
@@ -31,26 +31,23 @@ async def start_voa_exam(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_exam_words[user_id] = word_data
     active_voa_exam.add(user_id)
 
-    if update.callback_query:
-        target = update.callback_query.message
-    else:
-        target = update.message
+    target = update.callback_query.message if update.callback_query else update.message
 
     await target.reply_text(
-        f"\U0001F4D8 Level: {word_data['level']}\n"
-        f"\U0001F4DA Topic: {word_data['topic']}\n\n"
-        f"\U0001F9E0 Definition: {word_data['definition']}\n\n"
-        f"\U0001F399 Say or type the word that matches this definition:"
+        f"📘 Level: {word_data['level']}\n"
+        f"📚 Topic: {word_data['topic']}\n\n"
+        f"🧠 Definition: {word_data['definition']}\n\n"
+        f"🎙 Say or type the word that matches this definition:"
     )
 
-# 🧠 Обработка текстового ответа в exam-режиме
+# 🧠 Обработка текстового ответа
 async def handle_voa_text_exam(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id not in active_voa_exam:
         return
 
-    text = update.message.text.strip().lower()
-    await check_voa_answer(update, context, user_id, text)
+    user_input = update.message.text.strip().lower()
+    await check_voa_answer(update, context, user_id, user_input)
 
 # 🎙 Обработка голосового ответа
 async def handle_voa_voice_exam(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -64,7 +61,7 @@ async def handle_voa_voice_exam(update: Update, context: ContextTypes.DEFAULT_TY
     else:
         await update.message.reply_text("⚠️ Sorry, I couldn't recognize your voice. Please try again.")
 
-# 🧠 Проверка ответа
+# 🔎 Проверка ответа
 async def check_voa_answer(update: Update, context: ContextTypes.DEFAULT_TYPE, user_id: int, text: str):
     correct_word = user_exam_words[user_id]["word"].lower()
 
@@ -78,12 +75,12 @@ async def check_voa_answer(update: Update, context: ContextTypes.DEFAULT_TYPE, u
     update_word_memory(user_id, correct_word)
     active_voa_exam.discard(user_id)
 
-    # После ответа сразу новый вопрос
+    # Новый вопрос
     await start_voa_exam(update, context)
 
 # 📖 Показ примера
 async def show_exam_example(update: Update, word_data: dict):
     await update.message.reply_text(
-        f"\U0001F4AC Example: {word_data['example']}",
+        f"💬 Example: {word_data['example']}",
         parse_mode="HTML"
     )
