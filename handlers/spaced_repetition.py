@@ -30,13 +30,23 @@ async def start_spaced_vocab(update: Update, context: ContextTypes.DEFAULT_TYPE)
     with open(path, "wb") as f:
         f.write(audio.content)
 
-    with open(path, "rb") as audio_file:
-        await update.message.reply_voice(voice=audio_file)
+    if update.message:
+        chat_id = update.message.chat.id
+    elif update.callback_query:
+        chat_id = update.callback_query.message.chat.id
+    else:
+        return  # Безопасный выход, если что-то не так
 
-    await update.message.reply_text(
-        f"✏️ Type or say the word you hear...\n\n"
-        f"📘 Level: {word_data['level']}\n"
-        f"📚 Topic: {word_data['topic']}",
+    with open(path, "rb") as audio_file:
+        await context.bot.send_voice(chat_id=chat_id, voice=audio_file)
+
+    await context.bot.send_message(
+        chat_id=chat_id,
+        text=(
+            f"✏️ Type or say the word you hear...\n\n"
+            f"📘 Level: {word_data['level']}\n"
+            f"📚 Topic: {word_data['topic']}"
+        ),
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("✅ I know it", callback_data="vocab_remember")],
             [InlineKeyboardButton("🔁 Repeat word", callback_data="vocab_repeat")]
