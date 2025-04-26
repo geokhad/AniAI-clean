@@ -11,6 +11,7 @@ from handlers.state import (
     active_ask,
     notified_voice_users,
 )
+from handlers.exam_mode import active_voa_exam, handle_voa_text_exam  # ✅ Добавлено
 from utils.memory import get_memory, update_memory
 from utils.google_sheets import log_translation
 from handlers.image import handle_image_prompt
@@ -52,6 +53,12 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
 
         if contains_prohibited_content(text):
             await update.message.reply_text("🚫 Обнаружен недопустимый или опасный запрос. Попробуй переформулировать.")
+            return
+
+        # ✅ Если пользователь в режиме VOA exam — отправляем ответ туда
+        if user_id in active_voa_exam:
+            update.message.text = text
+            await handle_voa_text_exam(update, context)
             return
 
         await update.message.reply_text(f"📝 Распознано:\n{text}")
