@@ -1,4 +1,3 @@
-
 from telegram import Update
 from telegram.ext import ContextTypes
 import random
@@ -30,12 +29,11 @@ async def start_voa_exam(update: Update, context: ContextTypes.DEFAULT_TYPE):
     active_voa_exam.add(user_id)
 
     await update.message.reply_text(
-    f"📘 Level: {word_data['level']}\n"
-    f"📚 Topic: {word_data['topic']}\n\n"
-    f"🧠 Definition: {word_data['definition']}\n\n"
-    f"🎙 Say or type the word that matches this definition:"
-)
-
+        f"📘 Level: {word_data['level']}\n"
+        f"📚 Topic: {word_data['topic']}\n\n"
+        f"🧠 Definition: {word_data['definition']}\n\n"
+        f"🎙 Say or type the word that matches this definition:"
+    )
 
 # 🧠 Обработка текстового ответа в exam-режиме
 async def handle_voa_text_exam(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -56,6 +54,9 @@ async def handle_voa_text_exam(update: Update, context: ContextTypes.DEFAULT_TYP
     update_word_memory(user_id, correct_word)
     active_voa_exam.discard(user_id)
 
+    # После ответа сразу новый вопрос
+    await start_voa_exam(update, context)
+
 # 🎙 Обработка голосового ответа
 async def handle_voa_voice_exam(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -75,4 +76,3 @@ async def show_exam_example(update: Update, word_data: dict):
         f"💬 Example: {word_data['example']}",
         parse_mode="HTML"
     )
-
