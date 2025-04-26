@@ -1,3 +1,4 @@
+
 import os
 import logging
 import asyncio
@@ -54,8 +55,8 @@ app.add_handler(CommandHandler("music", handle_music_prompt))
 app.add_handler(CommandHandler("spaced", start_spaced_vocab))
 
 # Callback-кнопки
-app.add_handler(CallbackQueryHandler(handle_button))
-app.add_handler(CallbackQueryHandler(handle_daily_answer, pattern="^daily_answer"))
+app.add_handler(CallbackQueryHandler(handle_daily_answer, pattern="^daily_answer"))  # ✅ Сначала фильтрованные
+app.add_handler(CallbackQueryHandler(handle_button))  # ✅ Потом общее меню
 
 # Обработка сообщений
 app.add_handler(MessageHandler(filters.Document.ALL, analyze))
@@ -63,7 +64,7 @@ app.add_handler(MessageHandler(filters.VOICE, handle_voice_message))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
 
 # Обработка режима VOA Exam
-app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^🧠 VOA exam")), handle_voa_text_exam)
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_voa_text_exam))
 app.add_handler(MessageHandler(filters.VOICE, handle_voa_voice_exam))
 
 # Webhook хендлер
