@@ -6,52 +6,56 @@ from handlers.state import (
     active_imagers,
     active_analyzers,
     clear_user_state,
-    active_tts
+    active_tts,
 )
 from handlers.daily_english import start_daily_english
 from handlers.exam_mode import start_voa_exam
 
+# Главное меню
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [
-            InlineKeyboardButton(" 🧠 Вопрос", callback_data="gpt_help"),
-            InlineKeyboardButton(" 🎨 Картинка", callback_data="image_help")
+            InlineKeyboardButton("🧠 Вопрос", callback_data="gpt_help"),
+            InlineKeyboardButton("🎨 Картинка", callback_data="image_help")
         ],
         [
-            InlineKeyboardButton(" 🎼 Музыка", callback_data="music_help"),
-            InlineKeyboardButton(" 🎬 Видео", callback_data="video_help")
+            InlineKeyboardButton("🎼 Музыка", callback_data="music_help"),
+            InlineKeyboardButton("🎬 Видео", callback_data="video_help")
         ],
         [
-            InlineKeyboardButton(" 📄 Документ", callback_data="analyze_help"),
-            InlineKeyboardButton(" 🌍 Перевод", callback_data="translate")
+            InlineKeyboardButton("📄 Документ", callback_data="analyze_help"),
+            InlineKeyboardButton("🌍 Перевод", callback_data="translate")
         ],
         [
-            InlineKeyboardButton(" 🎙 Голос", callback_data="voice_mode"),
-            InlineKeyboardButton(" 🗣 Озвучка", callback_data="tts_mode")
+            InlineKeyboardButton("🎙 Голос", callback_data="voice_mode"),
+            InlineKeyboardButton("🗣 Озвучка", callback_data="tts_mode")
         ],
         [
-            InlineKeyboardButton(" 📝 Daily English", callback_data="daily_english"),
-            InlineKeyboardButton(" 🧠 VOA exam", callback_data="voa_vocab")
+            InlineKeyboardButton("📝 Daily English", callback_data="daily_english"),
+            InlineKeyboardButton("🧠 VOA exam", callback_data="voa_vocab")
         ],
         [
-            InlineKeyboardButton(" 💎 Премиум", callback_data="premium_mode"),
-            InlineKeyboardButton(" 🤝 Партнёрка", callback_data="affiliate")
+            InlineKeyboardButton("💎 Премиум", callback_data="premium_mode"),
+            InlineKeyboardButton("🤝 Партнёрка", callback_data="affiliate")
         ],
         [
-            InlineKeyboardButton(" ✍️ Отзыв", callback_data="feedback")
+            InlineKeyboardButton("✍️ Отзыв", callback_data="feedback")
         ]
     ]
+
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="📋 Главное меню AniAI:",
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
 
+# Обработка нажатий кнопок
 async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     user_id = query.from_user.id
 
+    # Если переход в режим — сброс активностей
     if query.data in ["go_menu", "voice_mode", "tts_mode", "change_language", "premium_mode", "feedback"]:
         clear_user_state(user_id)
 
@@ -75,11 +79,12 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await menu(update, context)
         return
 
+    # Обработка конкретных функций
     if query.data == "gpt_help":
         active_ask.add(user_id)
         await context.bot.send_message(
             chat_id=query.message.chat.id,
-            text="🧠 Просто задай вопрос, и я постараюсь объяснить всё ясно и по делу. Например: «Объясни квантовую запутанность простыми словами»"
+            text="🧠 Просто задай вопрос — я объясню простыми словами! Например: «Что такое квантовая запутанность?»"
         )
         return
 
@@ -87,23 +92,29 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         active_imagers.add(user_id)
         await context.bot.send_message(
             chat_id=query.message.chat.id,
-            text="🎨 Опиши, что ты хочешь увидеть. Например: «город на облаках в стиле стимпанк»"
+            text="🎨 Опиши картинку, которую хочешь получить. Например: «замок в облаках в стиле фэнтези»"
         )
         return
 
     if query.data == "music_help":
-        await context.bot.send_message(chat_id=query.message.chat.id, text="🎼 Функция генерации музыки сейчас в разработке.")
+        await context.bot.send_message(
+            chat_id=query.message.chat.id,
+            text="🎼 Генерация музыки скоро будет доступна. Следи за обновлениями!"
+        )
         return
 
     if query.data == "video_help":
-        await context.bot.send_message(chat_id=query.message.chat.id, text="🎬 Функция генерации видео сейчас в разработке.")
+        await context.bot.send_message(
+            chat_id=query.message.chat.id,
+            text="🎬 Генерация видео в разработке. Скоро запустим!"
+        )
         return
 
     if query.data == "analyze_help":
         active_analyzers.add(user_id)
         await context.bot.send_message(
             chat_id=query.message.chat.id,
-            text="📄 Прикрепи документ (PDF, DOCX, TXT) — и я сделаю краткий пересказ или анализ."
+            text="📄 Прикрепи документ (PDF, DOCX, TXT), я помогу сделать пересказ или анализ."
         )
         return
 
@@ -119,7 +130,7 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         active_tts.add(user_id)
         await context.bot.send_message(
             chat_id=query.message.chat.id,
-            text="🗣 Введи фразу — я озвучу её своим голосом."
+            text="🗣 Введи текст — я озвучу его красивым голосом!"
         )
         return
 
@@ -128,16 +139,16 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chat_id=query.message.chat.id,
             text="""🎙 <b>Голосовой режим AniAI</b>
 
-Просто отправь голосовое сообщение — я распознаю текст и пойму, что ты хочешь 🤖
+Просто отправь голосовое сообщение — я распознаю текст и выполню команду.
 
-✨ Ты можешь:
-• Сказать: «переведи на английский язык я тебя люблю» — и я переведу
-• Сказать: «сгенерируй картинку с котом» — и я её создам
-• Сказать: «сыграй мелодию для спокойного утра» — и я сгенерирую музыку
-• Продиктовать текст — я предложу перевод, если язык другой
-• Задать вопрос — и я включу режим ответа
+✨ Возможности:
+• Перевод: «переведи на английский я тебя люблю»
+• Генерация: «создай картинку закат над океаном»
+• Музыка: «сыграй утреннюю мелодию»
+• Вопросы: «объясни, что такое блокчейн»
+• Озвучка: «озвучь текст доброе утро»
 
-💡 Говори со мной свободно — я подстроюсь под тебя 🪄""", parse_mode="HTML"
+💡 Говори свободно — я всё пойму!""", parse_mode="HTML"
         )
         return
 
@@ -154,32 +165,34 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if query.data == "affiliate":
-        text = """🤝 <b>Партнёрская программа AniAI</b>
+        await context.bot.send_message(
+            chat_id=query.message.chat.id,
+            text="""🤝 <b>Партнёрская программа AniAI</b>
 
-Приглашай пользователей — получай % от всех их покупок в течение 1 месяца.
+Приглашай друзей — получай бонусы от их покупок 30 дней подряд!
 
-📌 Твоя реферальная ссылка:
-<code>https://t.me/AniAI_newbot?start=ref</code>
-
-Чем больше людей — тем больше твой доход 💸"""
-        await context.bot.send_message(chat_id=query.message.chat.id, text=text, parse_mode="HTML")
+📌 Твоя ссылка:
+<code>https://t.me/AniAI_newbot?start=ref</code>""",
+            parse_mode="HTML"
+        )
         return
 
+    # Статические ответы
     responses = {
         "change_language": "🌐 Переключение языка будет доступно в следующем обновлении.",
         "premium_mode": """💎 <b>Премиум режим AniAI</b>
 
-Доступные функции:
-• GPT-4 для более точных и развёрнутых ответов
-• Расширенные лимиты на запросы и длину сообщений
-• 📌 Новое: <b>Контекстный диалог</b> — память последних 5 реплик и автоочистка через 10 минут.
+Доступно:
+• GPT-4 ответы
+• Расширенные лимиты
+• 📌 Память последних сообщений (5 реплик)
 
-⚙️ Эта функция будет доступна в ближайшем обновлении для премиум-пользователей.""",
-        "feedback": "📬 Напиши своё мнение или пожелание: @AniAI_supportbot"
+Скоро запуск премиум-подписки!""",
+        "feedback": "📬 Хочешь оставить отзыв или предложение? Пиши в поддержку: @AniAI_supportbot"
     }
 
-    response = responses.get(query.data)
-    if response:
-        await context.bot.send_message(chat_id=query.message.chat.id, text=response, parse_mode="HTML")
+    if query.data in responses:
+        await context.bot.send_message(chat_id=query.message.chat.id, text=responses[query.data], parse_mode="HTML")
     else:
-        await context.bot.send_message(chat_id=query.message.chat.id, text="⚙️ Эта функция пока в разработке.")
+        await context.bot.send_message(chat_id=query.message.chat.id, text="⚙️ Эта функция пока недоступна.")
+

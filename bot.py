@@ -29,7 +29,7 @@ from handlers.voice import handle_voice_message
 from handlers.music import handle_music_prompt
 from handlers.daily_english import handle_daily_answer
 from handlers.spaced_repetition import start_spaced_vocab
-from handlers.exam_mode import start_voa_exam, handle_voa_text_exam, handle_voa_voice_exam
+from handlers.exam_mode import start_voa_exam, handle_voa_button
 
 # Логирование
 logging.basicConfig(level=logging.INFO)
@@ -54,17 +54,16 @@ app.add_handler(CommandHandler("music", handle_music_prompt))
 app.add_handler(CommandHandler("spaced", start_spaced_vocab))
 
 # Callback-кнопки
-app.add_handler(CallbackQueryHandler(handle_daily_answer, pattern="^daily_answer"))
-app.add_handler(CallbackQueryHandler(handle_button))
+app.add_handler(CallbackQueryHandler(handle_daily_answer, pattern="^daily_answer"))  # Daily English ответы
+app.add_handler(CallbackQueryHandler(handle_voa_button, pattern="^voa_next$"))        # Кнопка следующего слова в VOA
+app.add_handler(CallbackQueryHandler(handle_button))                                 # Все остальные кнопки
 
 # Обработка сообщений
 app.add_handler(MessageHandler(filters.Document.ALL, analyze))
-app.add_handler(MessageHandler(filters.VOICE, handle_voa_voice_exam))  # Экзамен первым!
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_voa_text_exam))
-app.add_handler(MessageHandler(filters.VOICE, handle_voice_message))
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
+app.add_handler(MessageHandler(filters.VOICE, handle_voice_message))  # ✅ ВСЕ голосовые сообщения через универсальный обработчик
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))  # ✅ ВСЕ текстовые сообщения через универсальный обработчик
 
-# Webhook хендлер
+# Webhook обработчик
 async def handle_telegram(request):
     data = await request.json()
     update = Update.de_json(data, app.bot)
@@ -81,7 +80,7 @@ async def main():
 
     await app.bot.set_my_commands([
         BotCommand("menu", "📋 Главное меню AniAI"),
-        BotCommand("spaced", "🎿 Интервальное повторение")
+        BotCommand("spaced", "🎧 Интервальное повторение")
     ])
 
     await app.bot.set_webhook(url=WEBHOOK_URL)
