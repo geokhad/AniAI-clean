@@ -11,7 +11,7 @@ from utils.voice_tools import recognize_speech_from_voice
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Активные пользователи экзамена
+# Активные пользователи
 active_voa_exam = set()
 user_exam_words = {}
 
@@ -43,16 +43,20 @@ async def start_voa_exam(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"🎙 Say or type the word that matches this definition:"
     )
 
-# 🧠 Обработка текстового ответа в экзамене
-async def handle_voa_text_exam(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# 🧬 Обработка текстового или голосового ответа
+async def handle_voa_text_exam(update: Update, context: ContextTypes.DEFAULT_TYPE, recognized_text: str = None):
     user_id = update.effective_user.id
     if user_id not in active_voa_exam:
         return
 
-    text = update.message.text.strip().lower()
+    if recognized_text:
+        text = recognized_text.strip().lower()
+    else:
+        text = update.message.text.strip().lower()
+
     await check_voa_answer(update, context, user_id, text)
 
-# 🎙 Обработка голосового ответа в экзамене
+# 🎤 Обработка голосового сообщения
 async def handle_voa_voice_exam(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id not in active_voa_exam:
@@ -60,7 +64,7 @@ async def handle_voa_voice_exam(update: Update, context: ContextTypes.DEFAULT_TY
 
     text = await recognize_speech_from_voice(update, context)
     if text:
-        await check_voa_answer(update, context, user_id, text.lower())
+        await handle_voa_text_exam(update, context, recognized_text=text)
     else:
         await update.message.reply_text("⚠️ Sorry, I couldn't recognize your voice. Please try again.")
 
@@ -78,9 +82,9 @@ async def check_voa_answer(update: Update, context: ContextTypes.DEFAULT_TYPE, u
     update_word_memory(user_id, correct_word)
     active_voa_exam.discard(user_id)
 
-    # ➡️ Кнопка для следующего слова
+    # Кнопка ➡️ "Следующее слово"
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("➡️ Следующее слово", callback_data="voa_next")]
+        [InlineKeyboardButton("➡️ Следующее слово", callback_data="start_voa_exam")]
     ])
     await update.message.reply_text("Готов к следующему слову? Нажми кнопку!", reply_markup=keyboard)
 
@@ -91,7 +95,7 @@ async def show_exam_example(update: Update, word_data: dict):
         parse_mode="HTML"
     )
 
-# 🖱️ Обработка нажатия кнопки "Следующее слово"
+# 🎯 Обработчик кнопки "следующее слово"
 async def handle_voa_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
