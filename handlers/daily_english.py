@@ -31,6 +31,10 @@ async def handle_daily_answer(update: Update, context: ContextTypes.DEFAULT_TYPE
     user_id = query.from_user.id
     data = query.data.split("|", 1)
 
+    if query.data == "daily_next":
+        await start_daily_english(update, context)
+        return
+
     if len(data) != 2:
         await query.message.reply_text("⚠️ Неверный формат ответа.")
         return
@@ -51,4 +55,12 @@ async def handle_daily_answer(update: Update, context: ContextTypes.DEFAULT_TYPE
         reply = f"❌ Неправильно.\nПравильный ответ: <b>{correct}</b>\n\n📘 Объяснение: {explanation}"
 
     await query.message.reply_text(reply, parse_mode="HTML")
+
+    # Кнопка Следующий вопрос
+    next_button = InlineKeyboardMarkup([
+        [InlineKeyboardButton("➡️ Next Question", callback_data="daily_next")]
+    ])
+    await query.message.reply_text("➡️ Готов к следующему?", reply_markup=next_button)
+
+    # Убираем старый активный вопрос
     del active_quizzes[user_id]
