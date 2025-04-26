@@ -11,7 +11,7 @@ from handlers.state import (
     active_ask,
     notified_voice_users,
 )
-from handlers.exam_mode import active_voa_exam, handle_voa_text_exam  # ✅ Добавлено
+from handlers.exam_mode import active_voa_exam, handle_voa_text_exam  # ✅ Добавлено для поддержки экзамена
 from utils.memory import get_memory, update_memory
 from utils.google_sheets import log_translation
 from handlers.image import handle_image_prompt
@@ -20,7 +20,6 @@ from utils.safety import contains_prohibited_content
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# 🎙 Обработка голосового ввода
 async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     user_id = user.id
@@ -49,13 +48,14 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 file=audio_file,
                 response_format="text"
             )
+
         text = transcript.strip() if transcript else ""
 
         if contains_prohibited_content(text):
             await update.message.reply_text("🚫 Обнаружен недопустимый или опасный запрос. Попробуй переформулировать.")
             return
 
-        # ✅ Если пользователь в режиме VOA exam — отправляем ответ туда
+        # ✅ Если активирован режим VOA exam
         if user_id in active_voa_exam:
             update.message.text = text
             await handle_voa_text_exam(update, context)
