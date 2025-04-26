@@ -1,3 +1,4 @@
+
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from handlers.state import (
@@ -9,7 +10,7 @@ from handlers.state import (
     active_tts
 )
 from handlers.daily_english import start_daily_english
-from handlers.spaced_repetition import start_spaced_vocab  # ✅ Добавлено
+from handlers.exam_mode import start_voa_exam  # ✅ Актуальный импорт
 
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
@@ -31,7 +32,7 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ],
         [
             InlineKeyboardButton("📝 Daily English", callback_data="daily_english"),
-            InlineKeyboardButton("🧠 VOA exam", callback_data="voa_vocab")  # ✅ Добавлено
+            InlineKeyboardButton("🧠 VOA exam", callback_data="voa_vocab")
         ],
         [
             InlineKeyboardButton("💎 Премиум", callback_data="premium_mode"),
@@ -46,8 +47,6 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text="📋 Главное меню AniAI:",
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
-
-from handlers.spaced_repetition import start_spaced_vocab
 
 async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -103,7 +102,7 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if query.data == "voa_vocab":
-        await start_spaced_vocab(update, context)  # ✅ Обработчик для кнопки VOA exam
+        await start_voa_exam(update, context)  # ✅ Подключён новый модуль по правилам
         return
 
     if query.data == "affiliate":
