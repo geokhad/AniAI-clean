@@ -20,7 +20,7 @@ from utils.safety import contains_prohibited_content
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# 🎙️ Обработка голосового ввода
+# 🔊 Обработка голосового сообщения
 async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     user_id = user.id
@@ -53,7 +53,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         text = transcript.strip() if transcript else ""
 
         if not text:
-            await update.message.reply_text("⚠️ Не удалось распознать речь. Попробуйте ещё раз.")
+            await update.message.reply_text("⚠️ Не удалось распознать речь. Попробуй ещё раз.")
             return
 
         if contains_prohibited_content(text):
@@ -62,11 +62,15 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
 
         lower = text.lower()
 
+        # 🔁 Проверка режима VOA Exam
         if user_id in active_voa_exam:
-            update.message.text = text
-            await handle_voa_text_exam(update, context)
+            # Создание искусственного текстового update для передачи в экзамен
+            update_copy = update
+            update_copy.message.text = text
+            await handle_voa_text_exam(update_copy, context)
             return
 
+        # 🖋️ Обычная обработка голосового ввода
         await update.message.reply_text(f"📝 Распознано:\n{text}")
 
         if user_id not in notified_voice_users:
@@ -74,12 +78,14 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             await update.message.reply_text(
                 "💡 Ты можешь говорить команды:\n"
                 "• «переведи на русский I love you»\n"
-                "• «создай картинку»\n"
+                "• «переведи на английский я тебя люблю»\n"
+                "• «создай картинку закат над морем»\n"
                 "• «сыграй музыку»\n"
-                "• «объясни, что такое...»\n"
-                "• «озвучь текст»"
+                "• «объясни, что такое блокчейн»\n"
+                "• «озвучь текст: доброе утро»\n"
             )
 
+        # 🌍 Обработка известных голосовых команд
         if "переведи на русский" in lower:
             prompt = text.split("на русский", 1)[-1].strip()
             await translate_and_reply(update, prompt, "на русский")
@@ -124,9 +130,9 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             return
 
     except Exception as e:
-        await update.message.reply_text(f"⚠️ Ошибка распознавания речи: {e}")
+        await update.message.reply_text(f"⚠️ Ошибка обработки голоса: {e}")
 
-# 🌍 Перевод текста
+# 🌍 Переводчик
 async def translate_and_reply(update: Update, text: str, direction: str):
     try:
         system = "Переведи текст с английского на русский." if direction == "на русский" else "Переведи текст с русского на английский."
@@ -143,7 +149,7 @@ async def translate_and_reply(update: Update, text: str, direction: str):
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка перевода: {e}")
 
-# 🧐 Ответ с GPT
+# 👨‍💻 Ответ на голосовые вопросы
 async def gpt_answer(update: Update, prompt: str):
     user_id = update.effective_user.id
     history = get_memory(user_id)
@@ -167,7 +173,7 @@ async def gpt_answer(update: Update, prompt: str):
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка ответа: {e}")
 
-# 🔊 Универсальная озвучка
+# 🔊 Генерация голосового ответа
 async def handle_tts_playback(update: Update, text: str):
     await update.message.reply_text("🎧 Генерирую голосовое сообщение...")
     try:
@@ -183,6 +189,7 @@ async def handle_tts_playback(update: Update, text: str):
             await update.message.reply_voice(voice=audio_file)
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка TTS: {e}")
+
 
 # 📣 Озвучка через кнопку
 async def handle_tts_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
