@@ -20,6 +20,7 @@ from utils.safety import contains_prohibited_content
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+# 🎙️ Обработка голосового ввода
 async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     user_id = user.id
@@ -61,14 +62,11 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
 
         lower = text.lower()
 
-        # ✅ Если пользователь находится в режиме VOA Exam
         if user_id in active_voa_exam:
-            # Имитация текстового ответа
-            update.effective_message.text = text
+            update.message.text = text
             await handle_voa_text_exam(update, context)
             return
 
-        # 📝 Обычная обработка голосовых команд
         await update.message.reply_text(f"📝 Распознано:\n{text}")
 
         if user_id not in notified_voice_users:
@@ -78,9 +76,8 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 "• «переведи на русский I love you»\n"
                 "• «создай картинку»\n"
                 "• «сыграй музыку»\n"
-                "• «объясни, что такое…»\n"
-                "• «озвучь текст»\n\n"
-                "Я сам пойму, что ты хочешь 🤖"
+                "• «объясни, что такое...»\n"
+                "• «озвучь текст»"
             )
 
         if "переведи на русский" in lower:
@@ -129,7 +126,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка распознавания речи: {e}")
 
-# 🌍 Перевод
+# 🌍 Перевод текста
 async def translate_and_reply(update: Update, text: str, direction: str):
     try:
         system = "Переведи текст с английского на русский." if direction == "на русский" else "Переведи текст с русского на английский."
@@ -146,7 +143,7 @@ async def translate_and_reply(update: Update, text: str, direction: str):
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка перевода: {e}")
 
-# 🤖 Ответ с GPT
+# 🧐 Ответ с GPT
 async def gpt_answer(update: Update, prompt: str):
     user_id = update.effective_user.id
     history = get_memory(user_id)
@@ -187,7 +184,7 @@ async def handle_tts_playback(update: Update, text: str):
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка TTS: {e}")
 
-# 📢 Озвучка через кнопку
+# 📣 Озвучка через кнопку
 async def handle_tts_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id not in active_tts:

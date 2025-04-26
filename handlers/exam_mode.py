@@ -1,3 +1,5 @@
+# exam_mode.py
+
 from telegram import Update
 from telegram.ext import ContextTypes
 import random
@@ -15,7 +17,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 active_voa_exam = set()
 user_exam_words = {}
 
-# ▶️ Запуск VOA exam
+# ▶️ Запуск VOA exam: бот показывает определение, а не само слово
 async def start_voa_exam(update: Update, context: ContextTypes.DEFAULT_TYPE):
     today = date.today().isoformat()
     due_words = [word for word in spaced_words if word["next_review"] <= today]
@@ -40,32 +42,16 @@ async def start_voa_exam(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"🎙 Say or type the word that matches this definition:"
     )
 
-# 🧠 Обработка текстового ответа
-async def handle_voa_text_exam(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# 🧠 Обработка текстового или распознанного ответа
+async def handle_voa_text_exam(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str):
     user_id = update.effective_user.id
     if user_id not in active_voa_exam:
         return
 
-    user_input = update.message.text.strip().lower()
-    await check_voa_answer(update, context, user_id, user_input)
-
-# 🎙 Обработка голосового ответа
-async def handle_voa_voice_exam(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    if user_id not in active_voa_exam:
-        return
-
-    text = await recognize_speech_from_voice(update, context)
-    if text:
-        await check_voa_answer(update, context, user_id, text.lower())
-    else:
-        await update.message.reply_text("⚠️ Sorry, I couldn't recognize your voice. Please try again.")
-
-# 🔎 Проверка ответа
-async def check_voa_answer(update: Update, context: ContextTypes.DEFAULT_TYPE, user_id: int, text: str):
+    user_input = text.strip().lower()
     correct_word = user_exam_words[user_id]["word"].lower()
 
-    if text == correct_word:
+    if user_input == correct_word:
         await update.message.reply_text("✅ Correct! Well done.")
     else:
         await update.message.reply_text(f"❌ Not quite. The correct word was: <b>{correct_word}</b>", parse_mode="HTML")
@@ -75,8 +61,19 @@ async def check_voa_answer(update: Update, context: ContextTypes.DEFAULT_TYPE, u
     update_word_memory(user_id, correct_word)
     active_voa_exam.discard(user_id)
 
-    # Новый вопрос
     await start_voa_exam(update, context)
+
+# 🎙 Обработка голосового ввода
+async def handle_voa_voice_exam(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if user_id not in active_voa_exam:
+        return
+
+    text = await recognize_speech_from_voice(update, context)
+    if text:
+        await handle_voa_text_exam(update, context, text)
+    else:
+        await update.message.reply_text("⚠️ Sorry, I couldn't recognize your voice. Please try again.")
 
 # 📖 Показ примера
 async def show_exam_example(update: Update, word_data: dict):
