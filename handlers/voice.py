@@ -61,28 +61,28 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
 
         lower = text.lower()
 
-        # ✅ Если активирован режим VOA exam
+        # ✅ Если пользователь находится в режиме VOA Exam
         if user_id in active_voa_exam:
+            # Создаём новый Update-like объект для передачи текста
             update.message.text = text
             await handle_voa_text_exam(update, context)
             return
 
-        # 📝 Если пользователь не в режиме экзамена — обрабатываем обычные голосовые команды
+        # 📝 Иначе обычная обработка голосовых команд
         await update.message.reply_text(f"📝 Распознано:\n{text}")
 
         if user_id not in notified_voice_users:
             notified_voice_users.add(user_id)
             await update.message.reply_text(
-                "💡 Ты можешь говорить фразы:\n"
+                "💡 Ты можешь говорить команды:\n"
                 "• «переведи на русский I love you»\n"
                 "• «создай картинку»\n"
                 "• «сыграй музыку»\n"
                 "• «объясни, что такое…»\n"
-                "• «озвучь»\n\n"
+                "• «озвучь текст»\n\n"
                 "Я сам пойму, что ты хочешь 🤖"
             )
 
-        # Проверка голосовых команд
         if "переведи на русский" in lower:
             prompt = text.split("на русский", 1)[-1].strip()
             await translate_and_reply(update, prompt, "на русский")
@@ -186,7 +186,8 @@ async def handle_tts_playback(update: Update, text: str):
             await update.message.reply_voice(voice=audio_file)
     except Exception as e:
         await update.message.reply_text(f"⚠️ Ошибка TTS: {e}")
-        # 📢 Озвучка через кнопку
+
+# 📢 Озвучка через кнопку
 async def handle_tts_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id not in active_tts:
@@ -200,4 +201,3 @@ async def handle_tts_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     await handle_tts_playback(update, text)
     active_tts.discard(user_id)
-
