@@ -30,6 +30,7 @@ from handlers.music import handle_music_prompt
 from handlers.daily_english import handle_daily_answer
 from handlers.spaced_repetition import start_spaced_vocab
 from handlers.exam_mode import start_voa_exam, handle_voa_button
+from handlers.word_analysis import handle_word_analysis  # ✅ Новый импорт
 
 # Логирование
 logging.basicConfig(level=logging.INFO)
@@ -61,7 +62,7 @@ app.add_handler(CallbackQueryHandler(handle_button))  # Все остальны�
 # Обработка сообщений
 app.add_handler(MessageHandler(filters.Document.ALL, analyze))
 app.add_handler(MessageHandler(filters.VOICE, handle_voice_message))
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_word_analysis))  # ✅ Используем разбор слов
 
 # Webhook обработчик
 async def handle_telegram(request):

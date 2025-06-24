@@ -35,7 +35,7 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             InlineKeyboardButton("🧠 VOA exam", callback_data="voa_vocab")
         ],
         [
-            InlineKeyboardButton("💎 Премиум", callback_data="premium_mode"),
+            InlineKeyboardButton("📘 Разбор слова", callback_data="word_analysis_help"),
             InlineKeyboardButton("🤝 Партнёрка", callback_data="affiliate")
         ],
         [
@@ -55,7 +55,6 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     user_id = query.from_user.id
 
-    # Если переход в режим — сброс активностей
     if query.data in ["go_menu", "voice_mode", "tts_mode", "change_language", "premium_mode", "feedback"]:
         clear_user_state(user_id)
 
@@ -177,6 +176,14 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
+    if query.data == "word_analysis_help":
+        await context.bot.send_message(
+            chat_id=query.message.chat.id,
+            text="📘 Напиши английское слово, которое хочешь разобрать. Например: *resilient*.",
+            parse_mode="Markdown"
+        )
+        return
+
     # Статические ответы
     responses = {
         "change_language": "🌐 Переключение языка будет доступно в следующем обновлении.",
@@ -195,4 +202,3 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(chat_id=query.message.chat.id, text=responses[query.data], parse_mode="HTML")
     else:
         await context.bot.send_message(chat_id=query.message.chat.id, text="⚙️ Эта функция пока недоступна.")
-
