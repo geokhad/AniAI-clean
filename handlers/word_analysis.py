@@ -6,9 +6,10 @@ from utils.google_sheets import append_to_sheet
 from utils.voice_tools import synthesize_and_send
 from openai import AsyncOpenAI
 
+# Создаём OpenAI-клиент один раз
 client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Полный промпт Holla English с 13 пунктами
+# Полный промпт Holla English с 13 шагами
 HOLLA_PROMPT = """
 Ты американец-носитель с 20-летним опытом преподавания английского. У тебя сертификаты CELTA, TOEFL, IELTS — сданы на максимальные баллы. Ты объясняешь английские слова так, чтобы русскоязычные ученики могли легко понять, запомнить и начать применять слово в реальной жизни, особенно в современной американской культуре.
 
@@ -82,14 +83,16 @@ async def handle_word_analysis(update: Update, context: ContextTypes.DEFAULT_TYP
             text=result
         )
 
+        # Озвучка самого слова
         await synthesize_and_send(
             text=word,
             chat_id=update.effective_chat.id,
             context=context
         )
 
+        # Запись в Google Sheets (не вложенный список!)
         now = datetime.now().strftime("%Y-%m-%d %H:%M")
-        append_to_sheet("Word_Analysis", [[str(user_id), word, now]])
+        append_to_sheet("Word_Analysis", [str(user_id), word, now])
 
     except Exception as e:
         await context.bot.send_message(

@@ -2,10 +2,12 @@ import os
 import uuid
 from pydub import AudioSegment
 import speech_recognition as sr
-import openai
-import aiohttp
+from openai import AsyncOpenAI  # ✅ Новый импорт OpenAI клиента
 
 recognizer = sr.Recognizer()
+
+# ✅ Создаём клиент один раз
+client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 async def recognize_speech_from_voice(update, context):
     user_id = update.effective_user.id
@@ -46,14 +48,15 @@ async def synthesize_and_send(text: str, chat_id: int, context):
     filename = f"/tmp/tts_{uuid.uuid4()}.mp3"
 
     try:
-        response = await openai.audio.speech.acreate(
+        # ✅ Новый синтаксис
+        response = await client.audio.speech.create(
             model="tts-1",
             voice="nova",  # или alloy, echo, fable, onyx, shimmer
             input=text
         )
 
         with open(filename, "wb") as f:
-            f.write(await response.read())
+            f.write(await response.aread())  # ✅ Новый способ получения байт
 
         with open(filename, "rb") as f:
             await context.bot.send_voice(chat_id=chat_id, voice=f)
